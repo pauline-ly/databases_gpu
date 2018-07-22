@@ -17,6 +17,9 @@ typedef unsigned long long LL;
 #define NUM_BLOCK 16384
 #define KEYS 0x0080000000000000
 
+// key to insert
+#define NUM_ITEMS 1000000
+
 // Definition of generic node class
 //class __attribute__((aligned (16))) Node
 class Node
