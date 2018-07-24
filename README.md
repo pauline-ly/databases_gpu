@@ -4,6 +4,7 @@ GPU中包括
 - linear
 - linear resize
 - hash of mega kv 
+- cuckoo
 
 其中多表的cuckoo结构部分完成已上传，可运行
 
