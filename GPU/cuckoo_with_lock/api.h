@@ -22,6 +22,8 @@ public:
     ~hashAPI();
 
     void hash_insert(int *k, int *v,int size);
+    
+    void hash_kernel(int *k, int *v,int size,int *op);
 
     void hash_search(int *k, int *v,int size);
 

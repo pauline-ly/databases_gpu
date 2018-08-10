@@ -49,7 +49,7 @@ hashAPI::hashAPI(int size) {
     /// malloc table
     checkCudaErrors(cudaGetLastError());
     cuckoo * h_table=(cuckoo*)malloc(sizeof(cuckoo));
-    printf("size: %d tablesize:%d \n",size,table_size);
+    printf("size: %d tablesize:%d s_bucket:%d \n block:%d  thread:%d\n",size,table_size,s_bucket,NUM_THREADS,NUM_BLOCK);
     for(int i=0;i<TABLE_NUM;i++){
         cudaMalloc((void **) &h_table->table[i], sizeof(TYPE) * s_size * 2);
         cudaMemset(h_table->table[i], 0, sizeof(TYPE) * s_size * 2);
@@ -95,6 +95,42 @@ void hashAPI::hash_insert(TTT *key, TTT *value,int size) {
 //    checkCudaErrors(cudaGetLastError());
 //    printf("insert ok\n");
 }
+
+void hashAPI::hash_kernel(TTT *key, TTT *value,int size,TTT *op) {
+
+//    checkCudaErrors(cudaGetLastError());
+
+//    /// overflow ,TODO  rehash...
+//    if(size+num_size > table_size*NUM_OVERFLOW_ratio){
+//        TTT old_size=table_size;
+//        table_size *= NUM_grow_ratio;
+//        gpu_rehash( old_size, table_size);
+//    }
+
+    num_size+=size;
+    TTT* d_keys;
+    cudaMalloc((void**)&d_keys, sizeof(TTT)*size);
+    cudaMemcpy(d_keys, key, sizeof(TTT)*size, cudaMemcpyHostToDevice);
+
+    TTT* d_value;
+    cudaMalloc((void**)&d_value, sizeof(TTT)*size);
+    cudaMemcpy(d_value, value, sizeof(TTT)*size, cudaMemcpyHostToDevice);
+    
+    TTT* d_op;
+    cudaMalloc((void**)&d_op, sizeof(TTT)*size);
+    cudaMemcpy(d_op, op, sizeof(TTT)*size, cudaMemcpyHostToDevice);
+
+     // does size need be copy first
+     gpu_lp_kernel(d_keys,d_value,size,rehash,hash_table,table_size,d_op);
+
+    // does size need be copy first
+    //gpu_lp_insert(d_keys,d_value,size,rehash,hash_table,table_size);
+    //printf("self check success\n");
+//    checkCudaErrors(cudaGetLastError());
+//    printf("insert ok\n");
+}
+
+
 
 void hashAPI::hash_search(TTT *key, TTT *value,int size){
 //    checkCudaErrors(cudaGetLastError());

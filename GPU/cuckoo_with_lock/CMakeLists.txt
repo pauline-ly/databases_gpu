@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 2.8)
 project(linear)
 find_package(CUDA QUIET REQUIRED)
 
-set(CUDA_NVCC_FLAGS -gencode arch=compute_61,code=sm_61;-G;-g)
+#set(CUDA_NVCC_FLAGS -gencode arch=compute_61,code=sm_61;-G;-g;--ptxas-options=-v)
+set(CUDA_NVCC_FLAGS -gencode arch=compute_61,code=sm_61;-O3;--ptxas-options=-v)
 include_directories(/usr/local/cuda/samples/common/inc)
 
 set(CMAKE_CXX_STANDARD 11)

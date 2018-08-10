@@ -25,11 +25,13 @@
 /// cuckoo prar
 #define BUCKET_SIZE 32
 #define MAX_ITERATOR 30
-#define TABLE_NUM 5
+#define TABLE_NUM 4
 
 /// kernel
+//#define NUM_THREADS 512
+//#define NUM_BLOCK 32
 #define NUM_THREADS 512
-#define NUM_BLOCK 32
+#define NUM_BLOCK 512
 
 
 /// for debug

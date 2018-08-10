@@ -48,6 +48,16 @@ cuckoo_insert(TTT* key, /// key to insert
               TTT table_size);
 
 __global__ void
+cuckoo_kernel(TTT* key, /// key to insert
+              TTT* value, /// value to insert
+              TTT size, /// insert size
+              TTT* resize, /// insert error?
+              cuckoo* table, /// hash table
+              TTT table_size,
+              TTT *op);
+
+
+__global__ void
 cuckoo_search(TTT* key, /// key to s
               TTT* value, /// value to s
               TTT size, /// s size
@@ -60,6 +70,8 @@ void gpu_rehash(TTT old_size,TTT new_table_size);
 void gpu_lp_insert(TTT* key,TTT* value,TTT size,TTT* resize,cuckoo *table,TTT &table_size);
 //void gpu_lp_delete();
 void gpu_lp_search(TTT* key,TTT* ans,TTT size,cuckoo* table);
+
+void gpu_lp_kernel(TTT* key,TTT* value,TTT size,TTT* resize,cuckoo *table,TTT &table_size,TTT *op);
 
 
 
