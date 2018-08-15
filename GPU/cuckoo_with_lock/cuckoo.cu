@@ -17,11 +17,10 @@
 
 
 
-// TODO hash fun
-/// table size is dynamic
+// TODO: hash fun
+/// table size is dynamic ,using shared mem or constant men or other
 __device__ __forceinline__ TYPE
 get_next_loc(TYPE k,TYPE v,TYPE num_table,cuckoo* table){
-
     return (k + num_table) % 15629;
 }
 
@@ -33,6 +32,7 @@ __device__ void pbucket(bucket *b,int num,int hash,int t_size){
     }
     printf("\n");
 }
+
 
 __global__ void
 cuckoo_kernel(TTT* key, /// key to insert
@@ -75,6 +75,8 @@ cuckoo_insert(TTT* key, /// key to insert
     int tmp;
 
     volatile __shared__ int wrap[( NUM_THREADS)>>5 ];
+    
+    /// TODO: The size must be an integer multiple of 32, otherwise there may be no 32 threads in a warp.
     while (tid < size) {
 
         int is_active = 1;/// mark for work 
