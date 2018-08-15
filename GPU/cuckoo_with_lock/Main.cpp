@@ -14,28 +14,7 @@
 using namespace std;
 
 bool  test_size(int size){
-    
-    int adds=0;
-    int deletes=0;
-    int i;
 
-   	if (adds+deletes > 100) {
-    	printf("Sum of add and delete precentages exceeds 100.\nAborting...\n");
-     	exit(1);
-  	}
-    
-   auto *op=new int[size];
-
-  	// Populate the op sequence
-  	for(i=0;i<(size*adds)/100;i++){
-    	op[i]=ADD;
-  	}
-  	for(;i<(size*(adds+deletes))/100;i++){
-    	op[i]=DELETE;
-  	}
-  	for(;i<size;i++){
-    	op[i]=SEARCH;
-  	}
     
     printf("\tsize:%d\n",size);
     cudaDeviceReset();
@@ -46,23 +25,18 @@ bool  test_size(int size){
     auto *chck=new int[size];
 
     for(int i=0;i<size;i++){
+       
+        /// TODO：修改hash函数 如果key太大比如可能导致hash返回负数，key[i]>>1;即可
         key[i]=2*i+3+1;
         value[i]=3*i+3+1;
         search[i]=i+3+1;
         chck[i]=0;
     }
-//     //ADD_FAILURE()<<"test_simple"<<"\n";
-//     // table_size = size/4
+
      hashAPI h(size*2);
-    //insert size/8
-    //h.hash_insert(key,value,size/8);
-    
-//     //insert size/8 ~ size/4
-//     h.hash_insert(key,value,size/4);
-//     //insert left 3/4
-     //h.hash_insert(key,value,size);
-     struct  timespec start, end;
-     double diff;
+ 
+    struct  timespec start, end;
+    double diff;
     cudaDeviceSynchronize();
     
     clock_gettime(CLOCK_MONOTONIC, &start);
@@ -76,23 +50,7 @@ bool  test_size(int size){
     
     
     h.hash_search(key,chck,size);
-   /*
-    cudaDeviceSynchronize();
-    
-    clock_gettime(CLOCK_MONOTONIC, &start);
-    
-    h.hash_kernel(key,value,size,op);
-    
-    cudaDeviceSynchronize();
-    
-    clock_gettime(CLOCK_MONOTONIC, &end);
-    diff = 1000000 * (end.tv_sec-start.tv_sec) + (double)(end.tv_nsec-start.tv_nsec)/1000;
-    printf("the time is %.2lf us, speed is %.2f Mops\n", 
-        (double)diff, (double)(size) / diff);
-    
-    
-    
-   */
+  
     int tmp=0;
     for(int i=0;i<size;i++){
         if(chck[i]!=value[i]){
