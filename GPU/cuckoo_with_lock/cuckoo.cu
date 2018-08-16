@@ -21,7 +21,7 @@
 /// table size is dynamic ,using shared mem or constant men or other
 __device__ __forceinline__ TYPE
 get_next_loc(TYPE k,TYPE v,TYPE num_table,cuckoo* table){
-    return (k + num_table) % 15629;
+    return (k + num_table) % (table->Lsize[num_table]/BUCKET_SIZE);
 }
 
 
