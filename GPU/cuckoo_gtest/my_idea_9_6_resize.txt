@@ -1,0 +1,17 @@
+[==========] Running 1 test from 1 test case.
+[----------] Global test environment set-up.
+[----------] 1 test from HashStreamTEST
+[ RUN      ] HashStreamTEST.Four
+	size:1000000
+>>>size: 5000000 tablesize:5002240 s_bucket:39080 
+>>>block:512  thread:512
+<<<>>>ALL-insert-search-stream：the time is 24893.21 us ( 160.69 Mops)
+¶¶¶test 1000000 complete
+
+
+[       OK ] HashStreamTEST.Four (4390 ms)
+[----------] 1 test from HashStreamTEST (4390 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test case ran. (4390 ms total)
+[  PASSED  ] 1 test.
