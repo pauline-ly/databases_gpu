@@ -102,6 +102,7 @@ cuckoo_insert(TYPE* key, /// key to insert
 #endif
 
 /// step3   insert to the table. ===========================
+        ///for re lock , try other table
         operator_hash_table_num++;
         operator_hash_table_num %= TABLE_NUM;
         hash = get_next_loc(myk, operator_hash_table_num);
