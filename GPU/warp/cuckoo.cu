@@ -55,53 +55,36 @@ __device__ void pbucket(bucket *b,int num,int hash,int t_size)
 }
 
 
+
+
 __global__ void
 cuckoo_insert(TYPE* key, /// key to insert
               TYPE* value, /// value to insert
               TYPE size, /// insert size
               int* resize) /// insert error?
 {
-
-
     *resize = 0;
-
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
     /// for every k
-
-#if head_info_debug
-    if(tid==0) {
-    printf(">>>insert kernel:\n>>>size:%d  \n", size);
-    printf(">>>s_size:t1:%d, t2:%d, t3:%d, t4:%d\n",
-            table.Lsize[0], table.Lsize[1], table.Lsize[2], table.Lsize[3]);
-    }
-#endif
 
     /// warp cooperation
     int lan_id = threadIdx.x & 0x1f;
     int warp_num_in_all = tid >> 5;
 
     TYPE myk, myv;
-
     TYPE evict_time_of_one_thread = 0;
-
     int hash;
     TYPE operator_hash_table_num = 0;
 
     /// using for ballot & CAS
     int tmp=2;
-
+    
+    /// first read data
     myk = key[warp_num_in_all];
     myv = value[warp_num_in_all];
-
-
+    
     while (warp_num_in_all < size) {
-
-#if MAX_ITERATOR_over_to_break_insert
-        if (*resize == 1)
-            break;
-#endif
-
-/// step3   insert to the table. ===========================
+  
         ///for re lock , try other table
         operator_hash_table_num++;
         operator_hash_table_num %= TABLE_NUM;
@@ -123,8 +106,8 @@ cuckoo_insert(TYPE* key, /// key to insert
         tmp = __ballot(b->key[lan_id] == myk);
 
 
-
         if (tmp != 0) { /// update
+        
             if(lan_id==__ffs(tmp) - 1) {
                b->value[lan_id] = myv;
             }
@@ -139,23 +122,18 @@ cuckoo_insert(TYPE* key, /// key to insert
             myv = value[warp_num_in_all];
 
             continue;
-
         }//end check update
-
-
 
 /// step3.3      check null & insert
         tmp = __ballot(b->key[lan_id] == 0);
 
         if (tmp != 0) {
-            /// set kv
             if (lan_id == __ffs(tmp) - 1) {
                 b->key[lan_id] = myk;
                 b->value[lan_id] = myv;
             }// insert
 
             table.Lock[Lock_pos(operator_hash_table_num, hash)] = 0;
-//
 
             tid += BLOCK_NUM * THREAD_NUM;
             warp_num_in_all = tid >> 5;
@@ -167,10 +145,6 @@ cuckoo_insert(TYPE* key, /// key to insert
             continue;
         }/// null insert over
 
-#if insert_debug
-            if(lan_id==0 && work_k==debug_num)
-                printf("evict-kv: %d ,%d ,ballot:%x \n",work_k,work_v,tmp);
-#endif
 
 
 /// step3.4     other,we need  cuckoo evict
@@ -190,13 +164,8 @@ cuckoo_insert(TYPE* key, /// key to insert
         /// when one always get leader , mark rehash
         /// check long chain
         if (evict_time_of_one_thread >= MAX_ITERATOR) {
-#if record_cannot_insert_num
-            atomicAdd(resize,1);
-            printf(">>>evict_time_of_one_thread,need resize:%d,tid:%d\n",*resize,tid);
-#else
+        
             *resize = 1;
-            printf("need resize\n");
-#endif
             tid += BLOCK_NUM * THREAD_NUM;
             warp_num_in_all = tid >> 5;
             evict_time_of_one_thread = 0;
