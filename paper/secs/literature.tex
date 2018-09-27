@@ -1,0 +1,19 @@
+\section{related works}\label{sec:rel}
+Alcantara \textit{et al.} present a seminar work on GPU-based cuckoo hashing to accelerate computer graphics workloads \cite{alcantara2009real}. 
+This work has inspired a number of applications from diverse fields. Wu \textit{et al.} investigate the use of GPU-based cuckoo hashing for
+on-the-fly model checking \cite{wu2015gpu}. A proposal of accelerating the nearest neighbor search is presented in \cite{pan2010efficient}. 
+Zhang \textit{et al.} propose another efficient design of GPU-based cuckoo hashing to boost the performance for KV store \cite{zhang2015mega}.
+Due to the success of cuckoo hashing on GPUs, the implementation of \cite{alcantara2009real} has been adopted in the CUDPP library\footnote{https://github.com/cudpp/cudpp}. 
+Meanwhile, in the database domain, several SIMD hash table implementations have been proposed to facilitate relation join and graph processing, including cuckoo hash \cite{ross2007efficient} and linear probing \cite{zhong2014medusa}. 
+
+It is noted that the aforementioned works focus on the static case: the size of data that needs to be hashed is known in advance. Thus, the static designs would prepare a sufficiently large memory to store the hash table. In this way, the hash table operations are fast since the collision rarely happens. However, the static approach wastes memory resources and, to some extent, it prohibits data from other applications to coexist on the device memory. 
+This motivates us to develop a dynamic hash table on GPUs that actively makes adjustments according to the data size. 
+In this paper, we propose a dynamic cuckoo hash table on GPUs, which maintains high filled factor to minimize memory footprint. In order to support efficient concurrent hash updates, we introduce a novel voter-based coordination scheme which reduces thread conflicts. Experimental results have revealed that the proposed solution could achieve competitive or even better performance than the state-of-the-art static hash tables on GPUs, while utilizing significantly less device memory. 
+
+To the best of our knowledge, there is only one existing work for building dynamic hash tables on GPUs \cite{}.
+This proposed approach presents a concurrent linked list structure, called \emph{slab list}, to construct the dynamic hash table with \emph{chaining}. 
+However, parallel chaining incurs two major issues. 
+First, it could frequently invoke concurrent memory allocation requests, especially when the data keeps inserting. Efficient concurrent memory allocation is difficult to implement under the GPU architecture due to its massive parallelism. Although a dedicated memory management strategy is proposed in \cite{} to alleviate this allocation cost, it is not transparent to other applications. More specifically, \cite{} still needs to allocate a large piece of memory in advance to prepare for efficient dynamic allocation, and the occupied space cannot be readily accessed by other concurrent applications. 
+Second, the chaining approach has a lookup time of $\Omega(log(log(m)))$ for some KVs with high probability. This not only results in degraded performance for \formal{find}, but also triggers more overheads in resolving conflicts when multiple \formal{insert} and \formal{delete} operations occur at the same key.
+In contrast, the cuckoo hashing table adopted in this work guarantees $\Theta(1)$ worst case complexity for \formal{find} and \formal{delete}, 
+$O(1)$ amortized \formal{insert} performance. We do not introduce extra complication in implementing our own version of memory manager and only reply on the default memory allocator provided by CUDA. 

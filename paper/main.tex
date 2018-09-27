@@ -1,0 +1,51 @@
+\documentclass[10pt,sigconf]{acmart}
+\usepackage{xspace}
+\usepackage{mathtools}
+\usepackage{booktabs} % For formal tables
+\usepackage{algorithm}
+\usepackage{todonotes}
+\usepackage{color}
+\usepackage[noend]{algpseudocode}
+
+\setcopyright{none}
+
+% These commands are optional
+%\acmBooktitle{Transactions of the ACM Woodstock conference}
+%\editor{Jennifer B. Sartor}
+%\editor{Theo D'Hondt}
+%\editor{Wolfgang De Meuter}
+
+\input{secs/notation.tex}
+
+\begin{document}
+\title{Dynamic Hash Tables on GPUs}
+
+%\author{Ben Trovato}
+%\authornote{Dr.~Trovato insisted his name be first.}
+%\orcid{1234-5678-9012}
+%\affiliation{%
+%  \institution{Institute for Clarity in Documentation}
+%  \streetaddress{P.O. Box 1212}
+%  \city{Dublin}
+%  \state{Ohio}
+%  \postcode{43017-6221}
+%}
+%\email{trovato@corporation.com}
+% The default list of authors is too long for headers.
+%\renewcommand{\shortauthors}{B. Trovato et al.}
+
+\begin{abstract}
+\end{abstract}
+
+\maketitle
+
+\input{secs/introduction.tex}
+\input{secs/preliminaries.tex}
+\input{secs/literature.tex}
+\input{secs/cuckoo.tex}
+\input{secs/dynamic.tex}
+\input{secs/experiment.tex}
+\input{secs/conclusion.tex}
+\input{secs/appendix.tex}
+
+\end{document}
