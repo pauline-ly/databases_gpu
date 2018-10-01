@@ -17,6 +17,7 @@ We will introduce the experimental setup and the discuss the results.
 We adopt the original implementations of \cudpp, \megakv and \google from their corresponding inventors. For \linear, we implement the CUDA version of the algorithm proposed in \cite{hong2010mapcg}.
 Note that we do not compare with the dynamic GPU hash approach proposed in \cite{ashkiani2018dynamic} for two major reasons. First, we cannot obtain the original implementation from its authors. Second, the approach devises a dedicated memory allocator other than cudaMalloc. A dedicated allocator will improve the performance but add complexity the system. Additionally, it needs to occupy a large memory in advance and is not transparent to other GPU applications.
 In contrast, our proposed approach only use native allocator supported. 
+We do not compare with \cite{breslow2016horton} since it only improves \megakv marginally using a more costly insertion process.
 
 \begin{table}[t]
 	\caption{The datasets used in the experiments.}

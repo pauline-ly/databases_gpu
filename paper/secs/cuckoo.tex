@@ -21,7 +21,7 @@ chaining present several issues which are not friendly to the GPU architecture.
 Second, to lookup a KV pair, one only needs to search $d$ locations specified by $d$ unique hash functions. 
 Thus, the data could be stored contiguously in the same location and thus enable the preferred coalesced memory access. 
 Third, cuckoo hashing can maintain high filled factor, which is ideal for memory saving in the dynamic scenario. 
-For $d=3$, cuckoo hashing achieves over $90\%$ filled factor and still process \formal{insert} operations efficiently \cite{}.
+For $d=3$, cuckoo hashing achieves over $90\%$ filled factor and still process \formal{insert} operations efficiently \cite{fotakis2005space}.
 
 Figure~\ref{fig:hashtable} depicts the design of a single hash table $h^i$ on GPUs. 
 Assuming the keys are 4-byte integers. A bucket of 32 keys, which are all hashed to the same value $h^i_j$, are stored consecutively in the memory. 
@@ -37,7 +37,7 @@ e.g., finding a nonexistent KV pair or deleting a KV pair.
 
 \subsection{Parallel Hash Table Operations}\label{sec:vot:con}
 In the reminder of this session, we discuss how to utilize GPUs' threads to execute hash table operations in parallel.
-Following existing works \cite{}, we assume the \formal{find}, \formal{insert} and \formal{delete} operations are batched and each batch only contains one type of operations. A batch with mixed type of operations can also be supported but the semantic is ambiguous. 
+Following existing works \cite{alcantara2009real,zhang2015mega,breslow2016horton}, we assume the \formal{find}, \formal{insert} and \formal{delete} operations are batched and each batch only contains one type of operations. A batch with mixed type of operations can also be supported but the semantic is ambiguous. 
 
 \begin{algorithm}[t]
 	\begin{algorithmic}[1]
@@ -78,7 +78,7 @@ Then, each thread in the warp (a thread lane $l$) simultaneously searches the ke
 \vspace{1mm}\noindent\textbf{Insert.} Contention occurs when multiple \formal{insert} operations target at the same bucket. 
 There are two conflicting objectives for resolving the contention. On one hand, we want to utilize the warp-centric approach to access a bucket.
 On the other hand, a warp requires a mutex when updating a bucket to avoid corruption, and the locking is expensive on GPUs.  
-In the literature, it is a common practice to use atomic operations for implementing a mutex under the warp-centric approach \cite{}. 
+In the literature, it is a common practice to use atomic operations for implementing a mutex under the warp-centric approach \cite{zhang2015mega}. 
 In particular, we can still invoke a warp to insert a KV pair. The warp is required to acquire a lock before updating the corresponding bucket. 
 The warp will keep trying to acquire the lock before successfully obtain the control. 
 There are two drawbacks for this direct warp-centric approach. 
@@ -180,11 +180,11 @@ thus causes no contention.
 
 \vspace{1mm}\noindent\textbf{Complexity.}
 Since a \formal{find}, \formal{insert} and \formal{delete} operation is independently executed by a thread. 
-The analysis of a single thread complexity is the same as the sequential version of cuckoo hashing \cite{}: $O(1)$ worst case complexity for \formal{find} and \formal{delete}, $O(1)$ expected time for \formal{insert} for the case of 2 hash tables. 
-It has been pointed out that analyzing the theoretical upper bound complexity of insertion in $d \geq 3$ hash tables is very difficult \cite{}.  
+The analysis of a single thread complexity is the same as the sequential version of cuckoo hashing \cite{pagh2004cuckoo}: $O(1)$ worst case complexity for \formal{find} and \formal{delete}, $O(1)$ expected time for \formal{insert} for the case of 2 hash tables. 
+It has been pointed out that analyzing the theoretical upper bound complexity of insertion in $d \geq 3$ hash tables is very difficult \cite{alcantara2009real}.  
 Nevertheless, empirical results have shown that increasing the number of tables leads to better insertion performance, see our experiments in Section~\ref{sec:exp}.
 Thus, we assume the complexity for inserting to $d$ hash tables is the same as that of $2$ has tables, as long as $d$ keeps constant.  
 
 We then analyze the number of possible thread conflicts. Assuming we launch $m$ threads in parallel, each of them is assigned to an unique key, and the total number of unique buckets is $H=\sum_{i=1}^d|h^i|$. For \formal{find} and \formal{delete}, there is no conflict at all. 
-For \formal{insert}, computing the expected number of conflicting buckets resembles the \emph{balls and bins} problem \cite{}, which is $O(\binom{m}{2}/H)$. 
+For \formal{insert}, computing the expected number of conflicting buckets resembles the \emph{balls and bins} problem \cite{raab1998balls}, which is $O(\binom{m}{2}/H)$. 
 Given GPUs have a large number of threads, there could be a significant amount of conflicts. Thus, we propose the voter coordination scheme to reduce the cost of spinning on locks. Note that the analysis is done for the cases where the key to update is unique. More conflicts could occur in reality when the same key is updated in parallel. 
