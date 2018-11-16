@@ -1,13 +1,21 @@
-\documentclass[10pt,sigconf]{acmart}
+\documentclass{vldb}
+
+
+\usepackage{booktabs} % For formal tables
 \usepackage{xspace}
 \usepackage{mathtools}
-\usepackage{booktabs} % For formal tables
+
 \usepackage{algorithm}
 \usepackage{todonotes}
 \usepackage{color}
 \usepackage[noend]{algpseudocode}
 
-\setcopyright{none}
+\vldbTitle{}
+\vldbAuthors{xxx}
+\vldbDOI{https://doi.org/TBD}
+\vldbVolume{12}
+\vldbNumber{xxx}
+\vldbYear{2019}
 
 % These commands are optional
 %\acmBooktitle{Transactions of the ACM Woodstock conference}
@@ -34,10 +42,12 @@
 % The default list of authors is too long for headers.
 %\renewcommand{\shortauthors}{B. Trovato et al.}
 
-\begin{abstract}
-\end{abstract}
+
 
 \maketitle
+
+\begin{abstract}
+\end{abstract}
 
 \input{secs/introduction.tex}
 \input{secs/preliminaries.tex}
@@ -50,7 +60,7 @@
 
 
 \input{secs/appendix.tex}
-\bibliographystyle{ACM-Reference-Format}
+\bibliographystyle{abbrv}
 \bibliography{ref}
 
 \end{document}

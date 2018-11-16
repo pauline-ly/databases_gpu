@@ -1,9 +1,3 @@
-\section{Voter-based GPU Cuckoo Hash}\label{sec:vot}
-In this section, we first present a overview of the hash table structure and pinpoint a number of important design objectives in Section~\ref{sec:vot:has}.
-Subsequently, in Section~\ref{sec:vot:con}, we give details on how to perform updates with the \emph{voter} coordination, i.e., \formal{find}, \formal{insert} and \formal{delete}, for the case where hash table resizing is not required. 
-We leave how to handle the fully dynamic scenario in Section~\ref{sec:dyn} for further discussions. 
-
-
 \subsection{Hash Table Structure}\label{sec:vot:has}
 \begin{figure}[t]
 	\centering
@@ -11,6 +5,12 @@ We leave how to handle the fully dynamic scenario in Section~\ref{sec:dyn} for f
 	\caption{The hash table structure}
 	\label{fig:hashtable}
 \end{figure}
+
+\section{Voter-based GPU Cuckoo Hash}\label{sec:vot}
+In this section, we first present a overview of the hash table structure and pinpoint a number of important design objectives in Section~\ref{sec:vot:has}.
+Subsequently, in Section~\ref{sec:vot:con}, we give details on how to perform updates with the \emph{voter} coordination, i.e., \formal{find}, \formal{insert} and \formal{delete}, for the case where hash table resizing is not required. 
+We leave how to handle the fully dynamic scenario in Section~\ref{sec:dyn} for further discussions. 
+
 
 Adopted from cuckoo hashing \cite{}, we build $d$ hash tables with $d$ unique hash functions: $h^1,h^2,\ldots,h^d$. 
 In this work, we use a set of simple universal hash function such as $h^i(k) = (a_i\cdot k + b_i \mod p) \mod |h^i|$.
@@ -34,11 +34,6 @@ Thus, storing keys and values separately avoid the overhead of memory access whe
 e.g., finding a nonexistent KV pair or deleting a KV pair. 
 
 
-
-\subsection{Parallel Hash Table Operations}\label{sec:vot:con}
-In the reminder of this session, we discuss how to utilize GPUs' threads to execute hash table operations in parallel.
-Following existing works \cite{alcantara2009real,zhang2015mega,breslow2016horton}, we assume the \formal{find}, \formal{insert} and \formal{delete} operations are batched and each batch only contains one type of operations. A batch with mixed type of operations can also be supported but the semantic is ambiguous. 
-
 \begin{algorithm}[t]
 	\begin{algorithmic}[1]
 		\State $found \gets \emptyset$
@@ -53,6 +48,12 @@ Following existing works \cite{alcantara2009real,zhang2015mega,breslow2016horton
 	\end{algorithmic}
 	\caption{\textbf{Find}(lane $l$, warp $wid$, key $k$)}\label{algo:find}
 \end{algorithm}
+
+\subsection{Parallel Hash Table Operations}\label{sec:vot:con}
+In the reminder of this session, we discuss how to utilize GPUs' threads to execute hash table operations in parallel.
+Following existing works \cite{alcantara2009real,zhang2015mega,breslow2016horton}, we assume the \formal{find}, \formal{insert} and \formal{delete} operations are batched and each batch only contains one type of operations. A batch with mixed type of operations can also be supported but the semantic is ambiguous. 
+
+
 
 \vspace{1mm}\noindent\textbf{Find.} It is relative straightforward to parallelize \formal{find} operations since only read access is required. 
 Given a batch of size $m$, we launch $w$ warps in total (which means launching $32w$ threads in total) and each warp is responsible for $\floor{\frac{m}{w}}$ \formal{find} operations. To locate a KV, we need to hash the key with $d$ hash functions and look for the corresponding locations. 
@@ -74,6 +75,40 @@ Then, each thread in the warp (a thread lane $l$) simultaneously searches the ke
 	\caption{The performance of atomic operations for varying number of conflicts}
 	\label{fig:atomic}
 \end{figure}
+
+\begin{algorithm}[t]
+	\begin{algorithmic}[1]
+		\State $active \gets 1$	\label{algo:insert:active:start}
+		\While{true}
+		\State $l' \gets ballot(active == 1)$ \label{algo:insert:vote:start}
+		\If{$l'$ is invalid}
+		\State break \label{algo:insert:active:end}
+		\EndIf
+		\State $[(k',v'),i'] \gets broadcast(l')$ \label{algo:insert:lock:start}
+		\State $loc = h^{i'}(k')$
+		\If{$l' == l$}
+		\State $success \gets lock(loc)$ \label{algo:insert:lock:end}
+		\EndIf
+		\If{$broadcast(success,l') ==$ failure}
+		\State continue					\label{algo:insert:vote:end}
+		\EndIf
+		\State $l^* \gets ballot(loc[l].key == k' || loc[l].key ==\emptyset)$ \label{algo:insert:write:start}
+		\If{$l^*$ is valid and $l' == l$}
+		\State $loc[l^*].(key,val) \gets (k',v')$
+		\State $unlock(loc)$
+		\State $active \gets 0$;
+		\State continue			\label{algo:insert:write:end}
+		\EndIf
+		\State $l^* \gets ballot(loc[l].key \neq \emptyset)$
+		\If{$l^*$ is valid and $l' == l$}
+		\State $swap(loc[l^*].(key,val),(k',v'))$
+		\State $unlock(loc)$
+		\State $i \gets i+1$ \label{algo:insert:loop:end}
+		\EndIf
+		\EndWhile
+	\end{algorithmic}
+	\caption{\textbf{Insert}(lane $l$, warp $wid$, kv $(k,v)$, table $i$)}\label{algo:insert}
+\end{algorithm}
 
 \vspace{1mm}\noindent\textbf{Insert.} Contention occurs when multiple \formal{insert} operations target at the same bucket. 
 There are two conflicting objectives for resolving the contention. On one hand, we want to utilize the warp-centric approach to access a bucket.
@@ -97,39 +132,6 @@ The winner thread $l$ becomes the leader of the warp and takes control. Subseque
 If $l$ fails to get the lock, the warp revotes another leader to avoid locking on the same bucket.
 Compared with locking on atomic operations, the cost of warp voting is almost negligible since it is heavily optimized in the GPU architecture.  
 
-\begin{algorithm}[t]
-	\begin{algorithmic}[1]
-		\State $active \gets 1$	\label{algo:insert:active:start}
-		\While{true}
-			\State $l' \gets ballot(active == 1)$ \label{algo:insert:vote:start}
-			\If{$l'$ is invalid}
-				\State break \label{algo:insert:active:end}
-			\EndIf
-			\State $[(k',v'),i'] \gets broadcast(l')$ \label{algo:insert:lock:start}
-			\State $loc = h^{i'}(k')$
-			\If{$l' == l$}
-				\State $success \gets lock(loc)$ \label{algo:insert:lock:end}
-			\EndIf
-			\If{$broadcast(success,l') ==$ failure}
-				\State continue					\label{algo:insert:vote:end}
-			\EndIf
-			\State $l^* \gets ballot(loc[l].key == k' || loc[l].key ==\emptyset)$ \label{algo:insert:write:start}
-			\If{$l^*$ is valid and $l' == l$}
-				\State $loc[l^*].(key,val) \gets (k',v')$
-				\State $unlock(loc)$
-				\State $active \gets 0$;
-				\State continue			\label{algo:insert:write:end}
-			\EndIf
-			\State $l^* \gets ballot(loc[l].key \neq \emptyset)$
-			\If{$l^*$ is valid and $l' == l$}
-				\State $swap(loc[l^*].(key,val),(k',v'))$
-				\State $unlock(loc)$
-				\State $i \gets i+1$
-			\EndIf
-		\EndWhile
-	\end{algorithmic}
-	\caption{\textbf{Insert}(lane $l$, warp $wid$, kv $(k,v)$, table\_idx $i$)}\label{algo:insert}
-\end{algorithm}
 
 Parallel insertion with the voter coordination scheme is presented in Algorithm~\ref{algo:insert}.
 The pseudo code demonstrates how a thread (with lane $l$) from warp $wid$ inserts a KV $(k,v)$ to the $i$th hash table. 
@@ -140,6 +142,7 @@ The broadcast function ensures all threads in the warp receive the locking resul
 Otherwise, the warp follows $l'$ and proceeds to update the bucket for $(k',v')$ with a warp-centric approach similar to \formal{find}.
 Once a thread finds $k'$ or an empty space in the bucket, $l'$ will add or update with $(k',v')$ (lines~\ref{algo:insert:write:start}-\ref{algo:insert:write:end}).
 Otherwise there is no space left, $l'$ swaps $(k',v')$ with a random KV in the bucket and inserts the evicted KV to hash table $i+1$ in the next round. 
+In summary, each iteration of the loop presented in Algorithm~\ref{algo:insert} issues $1$ atomic operation and at most $1$ device memory read/write (lines~\ref{algo:insert:vote:start}-\ref{algo:insert:loop:end}).  
 
 Note that we have yet covered how to choose the hash table index $i$ for each insertion (Algorithm~\ref{algo:insert}). Additional number of conflicts would happen if all threads attempting to insert to the same table. For the flow of presentation, we leave the discussion to Section~\ref{sec:dyn} since choosing the hash table is more coherent to the load balancing problem for resizing hash tables. Moreover, a careful reader would find that the insertion process could lead to multiple appearances of the same key in different hash tables. To fill this gap, one can attach a timestamp to the insertion batch.
 Hence, the \formal{find} operation is required to scan all $d$ buckets of the same key and extracts the one with the latest timestamp.
