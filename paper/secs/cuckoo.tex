@@ -1,4 +1,4 @@
-\subsection{Hash Table Structure}\label{sec:vot:has}
+
 \begin{figure}[t]
 	\centering
 	\includegraphics[width=0.45\textwidth]{fig/Hashtable.pdf}
@@ -11,7 +11,7 @@ In this section, we first present a overview of the hash table structure and pin
 Subsequently, in Section~\ref{sec:vot:con}, we give details on how to perform updates with the \emph{voter} coordination, i.e., \formal{find}, \formal{insert} and \formal{delete}, for the case where hash table resizing is not required. 
 We leave how to handle the fully dynamic scenario in Section~\ref{sec:dyn} for further discussions. 
 
-
+\subsection{Hash Table Structure}\label{sec:vot:has}
 Adopted from cuckoo hashing \cite{}, we build $d$ hash tables with $d$ unique hash functions: $h^1,h^2,\ldots,h^d$. 
 In this work, we use a set of simple universal hash function such as $h^i(k) = (a_i\cdot k + b_i \mod p) \mod |h^i|$.
 $a_i,b_i$ are random integers, $p$ is a large prime.
@@ -26,12 +26,14 @@ For $d=3$, cuckoo hashing achieves over $90\%$ filled factor and still process \
 Figure~\ref{fig:hashtable} depicts the design of a single hash table $h^i$ on GPUs. 
 Assuming the keys are 4-byte integers. A bucket of 32 keys, which are all hashed to the same value $h^i_j$, are stored consecutively in the memory. 
 The design of buckets maximizes the utilization of memory bandwidth in GPUs. 
-Since the cache line size is 128 bytes, only a single memory load is required when one warp is assigned to access a bucket. 
+Since the L1 cache line size is 128 bytes, only a single access is required when one warp is assigned to access a bucket. 
 The values associated with the keys in the same bucket are also stored consecutively but in a separate array.   
 In other words, we use two arrays to store the keys and the values respectively.
 The values could take much larger memory space than the keys. 
 Thus, storing keys and values separately avoid the overhead of memory access when accessing the values are not necessary, 
 e.g., finding a nonexistent KV pair or deleting a KV pair. 
+
+For keys having size larger than 4 bytes, a simple strategy is to store less KV pairs in a basket. For example, if the keys are 8-types, then a basket can accommodate 16 KV pairs. In the worst case, a key taking 128 bytes occupy one basket alone, which is unnecessary large in practice.
 
 
 \begin{algorithm}[t]
@@ -156,7 +158,7 @@ Hence, the \formal{find} operation is required to scan all $d$ buckets of the sa
 
 We give the following example to demonstrate the parallel insertion process.
 \begin{example}
-	In Figure~\ref{fig:voter}, we visualize the scenario for three threads: $l_x$, $l_y$, $l_z$ from two warps, inserting KV pairs $(k_1,v_1)$,$(k_{33},v_{33})$,$(k_{65},v_{65})$ independently. 
+	In Figure~\ref{fig:voter}, we visualize the scenario for three threads: $l_x$, $l_y$, $l_z$ from warp $a$ and warp $b$, inserting KV pairs $(k_1,v_1)$,$(k_{33},v_{33})$,$(k_{65},v_{65})$ independently. 
 	Suppose $l_y$ and $l_z$ become the leaders of warp $a$ and $b$ respectively. Both threads will compete for the bucket $y$ and $l_z$ wins the battle. 
 	$l_z$ will then leads warp $b$ to inspect the bucket and evict $(k_{64},v_{64})$ by replacing with $(k_{65},v_{65})$. 
 	In the meanwhile, $l_y$ does not lock on bucket $y$ and joins the new leader $l_x$ voted in warp $a$. 
