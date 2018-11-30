@@ -26,7 +26,7 @@ For $d=3$, cuckoo hashing achieves over $90\%$ filled factor and still process \
 Figure~\ref{fig:hashtable} depicts the design of a single hash table $h^i$ on GPUs. 
 Assuming the keys are 4-byte integers. A bucket of 32 keys, which are all hashed to the same value $h^i_j$, are stored consecutively in the memory. 
 The design of buckets maximizes the utilization of memory bandwidth in GPUs. 
-Since the L1 cache line size is 128 bytes, only a single access is required when one warp is assigned to access a bucket. 
+Since the cache line size is 128 bytes, only a single access is required when one warp is assigned to access a bucket. 
 The values associated with the keys in the same bucket are also stored consecutively but in a separate array.   
 In other words, we use two arrays to store the keys and the values respectively.
 The values could take much larger memory space than the keys. 
