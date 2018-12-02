@@ -30,11 +30,11 @@ We do not compare with \cite{breslow2016horton} since it only improves \megakv m
 	\begin{tabular}{|c|c|c|c|}
 		\hline
 		Datasets & KV pairs & Unique keys & Size \\ \hline
-		\dstwitter & & & \\ \hline
-		\dsreddit & & & \\ \hline
-		\dstpch & & & \\ \hline
-		\dsali & & & \\ \hline
-		\dsrandom & & & \\ \hline
+		\dstwitter &5,834,944 & 44,523,684&5,834,944\\ \hline
+		\dsreddit & 48,104,875 & 41,466,682 & 48,104,875\\ \hline
+		\dstpch &1.0e+08 & 90319761&1.0e+08 \\ \hline
+		\dsali &1.0e+07 & 4583941&1.0e+07 \\ \hline
+		\dsrandom & 1.0e+08& 1.0e+08&1.0e+08 \\ \hline
 	\end{tabular}
 \end{table}
 
@@ -91,13 +91,13 @@ The settings of the aforementioned parameters could be found in Table~\ref{tbl:p
 \vspace{1mm}\noindent\textbf{Varying the number of hash tables.}
 
 \begin{figure}[h]
-\begin{minipage}{0.45\linewidth}\centering
+\begin{minipage}{0.48\linewidth}\centering
 	\includegraphics[width=\linewidth]{pic/tunning/tunning-insert.eps}
 	\centerline{\formal{insert}}
 	\end{minipage}
 	\hfill
-	\begin{minipage}{0.45\linewidth}\centering
-	\includegraphics[width=\linewidth]{pic/tunning/tunning-insert.eps}
+	\begin{minipage}{0.48\linewidth}\centering
+	\includegraphics[width=\linewidth]{pic/tunning/tunning-search.eps}
 	\centerline{\formal{find}}
 	\end{minipage}
 	\caption{Throughput of \voter when varying number of hash tables.}
@@ -108,12 +108,12 @@ The settings of the aforementioned parameters could be found in Table~\ref{tbl:p
 \vspace{1mm}\noindent\textbf{Varying the data variance $\sigma$.}
 
 \begin{figure}[h]
-	\begin{minipage}{0.45\linewidth}\centering
+	\begin{minipage}{0.48\linewidth}\centering
 	\includegraphics[width=\linewidth]{pic/static/static_insert.eps}
 	\centerline{\formal{insert}}
 	\end{minipage}
 	\hfill
-	\begin{minipage}{0.45\linewidth}\centering
+	\begin{minipage}{0.48\linewidth}\centering
 	\includegraphics[width=\linewidth]{pic/static/static_search.eps}
 	\centerline{\formal{find}}
 	\end{minipage}
@@ -123,22 +123,80 @@ The settings of the aforementioned parameters could be found in Table~\ref{tbl:p
 
 \begin{figure*}[h]
 	\begin{minipage}{0.3\linewidth}\centering
-		\includegraphics[width=\linewidth]{fig/PlaceHolder.pdf}
+		\includegraphics[width=\linewidth]{pic/static-profi/warp.eps}
 		\centerline{Warp Efficiency}
 	\end{minipage}
 	\hfill
 	\begin{minipage}{0.3\linewidth}\centering
-	\includegraphics[width=\linewidth]{fig/PlaceHolder.pdf}
+	\includegraphics[width=\linewidth]{pic/static-profi/memory-read.eps}
 	\centerline{Memory Bandwidth Utilization}
 	\end{minipage}
 	\hfill
 	\begin{minipage}{0.3\linewidth}\centering
-	\includegraphics[width=\linewidth]{fig/PlaceHolder.pdf}
+	\includegraphics[width=\linewidth]{pic/static-profi/L2-read.eps}
 	\centerline{Cache Utilization}
 	\end{minipage}
 	\caption{Profiling the \formal{insert} performance for all compared approaches when varying the standard deviation $\sigma$.}
 	\label{fig:static}
 \end{figure*}
+
+\begin{figure*}[h]
+	\begin{minipage}{0.19\linewidth}\centering
+		\includegraphics[width=\linewidth]{pic/static-upper/upper_insert_twitter.eps}
+		\centerline{TW}
+	\end{minipage}
+	\hfill
+	\begin{minipage}{0.19\linewidth}\centering
+	\includegraphics[width=\linewidth]{pic/static-upper/upper_insert_reddit.eps}
+	\centerline{RE}
+	\end{minipage}
+	\hfill
+	\begin{minipage}{0.19\linewidth}\centering
+	\includegraphics[width=\linewidth]{pic/static-upper/upper_insert_tpch.eps}
+	\centerline{LINE}
+	\end{minipage}
+	\hfill
+        \begin{minipage}{0.19\linewidth}\centering
+	\includegraphics[width=\linewidth]{pic/static-upper/upper_insert_random.eps}
+	\centerline{RAND}
+	\end{minipage}
+	\hfill
+	\begin{minipage}{0.19\linewidth}\centering
+	\includegraphics[width=\linewidth]{pic/static-upper/upper_insert_ali.eps}
+	\centerline{COM}
+	\end{minipage}
+	\caption{Throughputs of insert for varying $\beta$.}
+	\label{fig:static}
+\end{figure*}
+\begin{figure*}[h]
+	\begin{minipage}{0.19\linewidth}\centering
+		\includegraphics[width=\linewidth]{pic/static-upper/upper_search_twitter.eps}
+		\centerline{TW}
+	\end{minipage}
+	\hfill
+	\begin{minipage}{0.19\linewidth}\centering
+	\includegraphics[width=\linewidth]{pic/static-upper/upper_search_reddit.eps}
+	\centerline{RE}
+	\end{minipage}
+	\hfill
+	\begin{minipage}{0.19\linewidth}\centering
+	\includegraphics[width=\linewidth]{pic/static-upper/upper_search_tpch.eps}
+	\centerline{LINE}
+	\end{minipage}
+	\hfill
+        \begin{minipage}{0.19\linewidth}\centering
+	\includegraphics[width=\linewidth]{pic/static-upper/upper_search_random.eps}
+	\centerline{RAND}
+	\end{minipage}
+	\hfill
+	\begin{minipage}{0.19\linewidth}\centering
+	\includegraphics[width=\linewidth]{pic/static-upper/upper_search_ali.eps}
+	\centerline{COM}
+	\end{minipage}
+	\caption{Throughputs of search for varying $\beta$.}
+	\label{fig:static}
+\end{figure*}
+
 
 \subsection{Dynamic Hashing Comparison}\label{sec:exp:dynamic}
 
