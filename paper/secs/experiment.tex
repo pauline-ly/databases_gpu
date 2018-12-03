@@ -125,12 +125,14 @@ For interested readers, please find the throughput results for varying the fille
 \vspace{1mm}\noindent\textbf{GPU Profiling.} To further study the behavior of the approaches, we present three types of profiling results for all \formal{insert} GPU kernels in Figure~\ref{fig:static:profile}.
 For \emph{warp efficiency}, \voter maintains a stable rate at around 70\%, which is significantly higher than the other two cuckoo hash approaches: \megakv and \cudpp.  
 We attribute this phenomenon to the voter mechanism proposed in Section~\ref{sec:vot:con}, which yields better overall load balancing. 
-\linear could achieve higher warp efficiency than \voter, but is very volatile for different datasets. This is because each \formal{insert} in \linear may require scanning varying number of hash values for distinct data distributions. 
+\linear could achieve higher warp efficiency than \voter, but is very volatile across different datasets. This is because each \formal{insert} in \linear may require scanning varying number of hash values for distinct data distributions. 
 For example, in the \dsali dataset, its warp efficiency drops below 40\% since \dsali contains more duplicated keys than other datasets. 
 
 Looking at \emph{cache} and \emph{memory bandwidth} profiling results, \megakv and \voter achieve better utilization as they employ the bucket mechanism.
 As \voter always needs to use atomicCAS to lock a bucket before accessing it, its utilization is inferior than that of \megakv due to the additional IO when inserting a KV pair to a bucket. In addition, atomicCAS is less efficient than atomicExch as it involves more workloads per operation (see Table~\ref{fig:atomic}). Nevertheless, implementations based on atomicExch only supports KV pair with 64 bits, whereas adopting atomicCAS in \voter can support arbitrary length. 
-It is also noted that, even though \megakv has great cache utilization due to the use of atomicExch accessing buckets directly, the overall performance is bounded by device memory IOs. In summary, \voter supports more general hash tables and achieve competitive efficiency against the compared GPU baselines. 
+It is also noted that, even though \megakv has great cache utilization due to the use of atomicExch accessing buckets directly, the overall performance is bounded by device memory IOs. 
+
+In summary, \voter supports more general hash tables and achieve competitive efficiency against the compared GPU baselines under the static environment. 
 
 \begin{figure}[t]
 	\begin{minipage}{0.48\linewidth}\centering
