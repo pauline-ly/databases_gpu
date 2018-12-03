@@ -197,6 +197,69 @@ The settings of the aforementioned parameters could be found in Table~\ref{tbl:p
 	\label{fig:static}
 \end{figure*}
 
+\begin{minipage}{\textwidth}
+ \begin{minipage}[t]{0.45\textwidth}
+  \centering
+     \makeatletter\def\@captype{table}\makeatother\caption{The failure of TW.}
+       \begin{tabular}{|c|c|c|c|c|c|}
+		\hline
+		           & 0.75 & 0.8 & 0.85 & 0.9 & 0.95\\ \hline
+		Linear &0.00\% & 0.00\% &0.00\%  & 0.00\% & 0.39\% \\ \hline
+		CUDPP & 0.00\% & 0.00\% &0.00\%  & 0.00\% & 0.00\% \\ \hline
+		MegaKV & 0.34\% & 0.56\% &0.89\%  & 1.37\% & 2.02\% \\ \hline
+		DyHash &0.00\% & 0.00\% &0.00\%  & 0.00\% & 0.00\% \\ \hline
+	\end{tabular}
+  \end{minipage}
+  \begin{minipage}[t]{0.45\textwidth}
+   \centering
+        \makeatletter\def\@captype{table}\makeatother\caption{The failure of RE.}
+        \begin{tabular}{|c|c|c|c|c|c|}
+		\hline
+		           & 0.75 & 0.8 & 0.85 & 0.9 & 0.95\\ \hline
+		Linear &0.01\% & 0.02\% &0.01\%  & 0.02\% & 1.97\% \\ \hline
+		CUDPP & 0.00\% & 0.00\% &0.00\%  & 0.00\% & 0.00\% \\ \hline
+		MegaKV & 0.51\% & 0.88\% &1.45\%  & 2.31\% & 3.51\% \\ \hline
+		DyHash &0.00\% & 0.00\% &0.00\%  & 0.00\% & 0.00\% \\ \hline
+	\end{tabular}
+   \end{minipage}
+    \begin{minipage}[t]{0.45\textwidth}
+   \centering
+        \makeatletter\def\@captype{table}\makeatother\caption{The failure of RAND.}
+        \begin{tabular}{|c|c|c|c|c|c|}
+		\hline
+		           & 0.75 & 0.8 & 0.85 & 0.9 & 0.95\\ \hline
+		Linear &0.00\% & 0.00\% &0.00\%  & 0.00\% & 1.96\% \\ \hline
+		CUDPP & 0.00\% & 0.00\% &0.00\%  & 0.00\% & 0.00\% \\ \hline
+		MegaKV & 0.42\% & 0.79\% &1.41\%  & 2.41\% & 3.90\% \\ \hline
+		DyHash &0.00\% & 0.00\% &0.00\%  & 0.00\% & 0.00\% \\ \hline
+	\end{tabular}
+   \end{minipage}
+    \begin{minipage}[t]{0.45\textwidth}
+   \centering
+        \makeatletter\def\@captype{table}\makeatother\caption{The failure of LINE.}
+        \begin{tabular}{|c|c|c|c|c|c|}
+		\hline
+		           & 0.75 & 0.8 & 0.85 & 0.9 & 0.95\\ \hline
+		Linear &0.00\% & 0.00\% &0.00\%  & 0.00\% & 0.39\% \\ \hline
+		CUDPP & 0.00\% & 0.00\% &0.00\%  & 0.00\% & 0.00\% \\ \hline
+		MegaKV & 0.46\% & 0.84\% &1.47\%  & 2.45\% & 3.87\% \\ \hline
+		DyHash &0.00\% & 0.00\% &0.00\%  & 0.00\% & 0.00\% \\ \hline
+	\end{tabular}
+   \end{minipage}
+    \begin{minipage}[t]{0.45\textwidth}
+   \centering
+        \makeatletter\def\@captype{table}\makeatother\caption{The failure of COM.}
+       \begin{tabular}{|c|c|c|c|c|c|}
+		\hline
+		           & 0.75 & 0.8 & 0.85 & 0.9 & 0.95\\ \hline
+		Linear &0.00\% & 0.00\% &0.00\%  & 0.00\% & 0.03\% \\ \hline
+		CUDPP & 0.01\% & 0.01\% &0.01\%  & 0.01\% & 0.01\% \\ \hline
+		MegaKV & 0.06\% & 0.80\% &1.01\%  & 1.27\% & 1.55\% \\ \hline
+		DyHash &0.00\% & 0.00\% &0.00\%  & 0.00\% & 0.00\% \\ \hline
+	\end{tabular}
+   \end{minipage}
+\end{minipage}
+
 
 \subsection{Dynamic Hashing Comparison}\label{sec:exp:dynamic}
 
