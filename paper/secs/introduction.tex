@@ -33,7 +33,7 @@ Hereby, we summarize our contributions as follows:
 	\item We propose a general hash table without assuming the size of the key-value pair and devise a novel voter-based coordination scheme to support the locking mechanism under massive GPU threads. 
 	\item We introduce an efficient policy to resize the hash tables and our theoretical analysis has demonstrated the near-optimality of the resizing policy.
 	\item We conduct extensive experiments on both synthetic and real datasets to showcase the superiority of the proposed approach over several state-of-the-art baselines on GPU hashing. 
-	For guaranteed filled ratio, our hash table design achieves up to XX speedups over the baselines against dynamic workloads. The profiling results have also revealed that our approach efficiently leverages GPU resources and demonstrates near-optimal load balancing. 
+	For guaranteed filled factor, our hash table design achieves up to XX speedups over the baselines against dynamic workloads. The profiling results have also revealed that our approach efficiently leverages GPU resources and demonstrates near-optimal load balancing. 
 \end{itemize}
 
 The remaining part of this paper is organized as follows. Section~\ref{sec:pre} introduces the preliminaries and the background on GPUs, followed by the related work in Section~\ref{sec:rel}. Section~\ref{sec:vot} presents our hash table designs as well as the voter-based coordination scheme.  Section~\ref{sec:dyn} introduces our resizing policy against dynamic updates on hash tables. The experimental results are reported in Section~\ref{sec:exp}. Finally, we conclude the paper in Section~\ref{sec:con}. 

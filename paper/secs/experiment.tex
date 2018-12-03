@@ -6,19 +6,20 @@ We will introduce the experimental setup and the discuss the results.
 
 \vspace{1mm}\noindent\textbf{Baselines.} We compare the proposed approach in this paper with several state-of-the-art hash table implementations on GPUs and CPUs. 
 \begin{itemize}
-	\item \cudpp is a popular CUDA primitive library which contains the hash table implementation published in~\cite{alcantara2009real}. 
-	\cudpp employs three hashing function and each hash value stores only one KV pair with 64 bits size (32 bits for key and 32 bits for value). 
-	Note that \cudpp only supports \formal{insert} and \formal{find} operations. 
+	\item \cudpp is a popular CUDA primitive library which contains the cuckoo hash table implementation published in~\cite{alcantara2009real}. 
+	\cudpp employs four hashing function and each hash value stores only one KV pair with 64 bits size (32 bits for key and 32 bits for value). 
+	\cudpp only supports \formal{insert} and \formal{find} operations. 
 	\item \megakv is a state-of-the-art approach for GPU-based key value store published in~\cite{zhang2015mega}. It employs a cuckoo hash with two hash functions.
-	\megakv also allocates a basket for each hash value. However, it does not lock a basket when performing update. Instead, it uses intra-block synchronization to resolve race condition. 
+	\megakv also allocates a bucket for each hash value. However, it does not lock a bucket when performing update. Instead, it uses intra-block synchronization to resolve race condition. 
 	\item \linear is a GPU-based hash table which uses linear open addressing to resolve conflicts \cite{hong2010mapcg}. 
 	\item \google is an efficient CPU-based hash table implementation\footnote{https://github.com/sparsehash/sparsehash-c11/}. We choose the \emph{dense\_hash\_map} implementation since it provides the best efficiency.
 	\item \voter is the approach proposed in this paper.
 \end{itemize}
 We adopt the original implementations of \cudpp and \google from their corresponding inventors. 
-For \megakv, we note that its intra-block synchronization could lead to inconsistency issue as well as a large number of insertion failures, especially when the filled ratio is high.  
-Thus, we revise its code by replacing the intra-block synchronization with atomicExch to resolve the race condition. The adoption of atomicExch preserves the design principle of \megakv for \emph{not} locking the entire basket for updates. Moreover, it leads to less insertion failures and similar performance against its original implementation. 
+For \megakv, we note that its intra-block synchronization could lead to inconsistency issue as well as a large number of insertion failures, especially when the filled factor is high.  
+Thus, we revise its code by replacing the intra-block synchronization with atomicExch to resolve the race condition. The adoption of atomicExch preserves the design principle of \megakv for \emph{not} locking the entire bucket for updates. Moreover, it leads to less insertion failures and similar performance against its original implementation. 
 For \linear, we implement the CUDA version of the algorithm proposed in \cite{hong2010mapcg}.
+
 Note that we do not compare with the dynamic GPU hash approach proposed in \cite{ashkiani2018dynamic} for two major reasons. First, we cannot obtain the original implementation from its authors. Second, the approach devises a dedicated memory allocator other than cudaMalloc. A dedicated allocator will improve the performance but add complexity the system. Additionally, it needs to occupy a large memory in advance and is not transparent to other GPU applications.
 In contrast, our proposed approach only use native allocator supported. 
 We do not compare with \cite{breslow2016horton} since it only improves \megakv marginally using a more costly insertion process.
@@ -41,13 +42,16 @@ We do not compare with \cite{breslow2016horton} since it only improves \megakv m
 \vspace{1mm}\noindent\textbf{Datasets.} We evaluate all compared approaches using several real world and synthetic datasets described as follows:
 \begin{itemize}
 	\item \dstwitter: Twitter is an online social network where users perform actions include \emph{tweet}, \emph{retweet}, \emph{quote} and \emph{reply}.
-	We crawl these actions for one week via Twitter stream API\footnote{https://dev.twitter.com/streaming/overview} on trending topics US president election, 2016 NBA finals and Euro 2016. The dataset contains 2,881,154 distinct users as keys and 9,724,908 actions.
-	\item \dsreddit: Reddit is an online forum where users perform actions include \emph{post} and \emph{comment}. We collect all Reddit \emph{comment} actions in May 2015 from \emph{kaggle}\footnote{https://www.kaggle.com.reddit/reddit-comments-may-2015} and query the Reddit API for the \emph{post} actions the same period. The dataset contains 2,628,904 distinct users as keys and 48,104,875 actions. 
- 	\item \dstpch: Lineitem is a synthetic table generated by the TPC-H benchmark\footnote{https://github.com/electrum/tpch-dbgen}. We generate \xxx rows of the lineitem table and select its partkey column and quantity column as the KV pairs. The dataset contains \xxx unique keys.  
-	\item \dsali: \todo[inline]{Need to fill in the info for the dataaset.} The dataset contains \xxx unique products as keys and \xxx transactions. 
+	We crawl these actions for one week via Twitter stream API\footnote{https://dev.twitter.com/streaming/overview} on trending topics US president election, 2016 NBA finals and Euro 2016. The dataset contains 5,834,944 KV pairs.
+	\item \dsreddit: Reddit is an online forum where users perform actions include \emph{post} and \emph{comment}. We collect all Reddit \emph{comment} actions in May 2015 from \emph{kaggle}\footnote{https://www.kaggle.com.reddit/reddit-comments-may-2015} and query the Reddit API for the \emph{post} actions the same period. The dataset contains 48,104,875 actions as KV pairs. 
+ 	\item \dstpch: Lineitem is a synthetic table generated by the TPC-H benchmark\footnote{https://github.com/electrum/tpch-dbgen}. We generate  100,000,000 rows of the lineitem table and 
+ 	\todo[inline]{How to select the keys?}
 	\item \dsrandom: Random is a synthetic dataset generated from a normal distribution. 
 	\todo[inline]{With what parameter?}
+	\item \dsali: \todo[inline]{Need to fill in the info for the dataaset.}
 \end{itemize}
+Since all GPU approaches (except for \voter) only supports 32 bit key, we hash longer keys to 32 bits across all datasets. 
+
 
 \begin{table}
 	\centering
@@ -88,7 +92,11 @@ The settings of the aforementioned parameters could be found in Table~\ref{tbl:p
 \todo[inline]{Fill in system specs.}
 
 \subsection{Tunning Parameters}
-\vspace{1mm}\noindent\textbf{Varying the number of hash tables.}
+
+A key parameter that affects the performance of \voter is the number of hash table chosen. For the static scenario, we present the throughput performance of \formal{insert} and \formal{find} for varying number of hash tables in Figure~\ref{fig:vary-table}, while fixing the memory space of the entire structure to ensure the default filled factor. 
+The throughput of \formal{insert} increases with more hash tables, since there are more alternative locations for inserting a KV pair. However, the marginal improvement drops for a larger number of hash tables. The throughput of \formal{find} falls with more hash tables as additional locations need to be scanned to locate a KV pair. Thus, one can tradeoff the performance between \formal{insert} and \formal{find} operations by varying the number of tables.
+In this paper, we choose three hash tables as our default implementation as it provides the best balance. 
+
 
 \begin{figure}[h]
 \begin{minipage}{0.48\linewidth}\centering
@@ -100,14 +108,31 @@ The settings of the aforementioned parameters could be found in Table~\ref{tbl:p
 	\includegraphics[width=\linewidth]{pic/tunning/tunning-search.eps}
 	\centerline{\formal{find}}
 	\end{minipage}
-	\caption{Throughput of \voter when varying number of hash tables.}
+	\caption{Throughput of \voter when varying the number of hash tables.}
 	\label{fig:vary-table}
 \end{figure}
 
 \subsection{Static Hashing Comparison}\label{sec:exp:static}
-\vspace{1mm}\noindent\textbf{Varying the data variance $\sigma$.}
 
-\begin{figure}[h]
+\vspace{1mm}\noindent\textbf{Throughput Analysis.} We present the throughput of all compared approaches in Figure~\ref{fig:static} when varying the filled factor. 
+First of all, GPU-based approaches are orders of magnitude faster than \google (2  million ops for \formal{insert} and 6 million ops for \formal{find} on average), which validates the motivation of designing hash tables on GPUs. 
+Among GPU hash tables, \megakv delivers the best performance across all datasets except for \dsali. Nevertheless, for \formal{insert}, the drawbacks of \megakv is that it fails to insert some of the KV pairs. Tables~\ref{tab:fail:tw}-\ref{tab:fail:com} present the percentages of insertion failure across all datasets. \megakv has up to 2.45\% failure rate for the default filled factor, which is the highest among all approaches. 
+Our proposed \voter has zero failure rate and achieve the 2nd best performance behind \megakv. We note that \cudpp obtains a significant advantage over all approaches in the \dsali dataset. This is because \cudpp will immediately terminate its GPU kernel once it finds some KV pairs cannot be inserted after a number of lookups. This explains why \cudpp has a superior performance since it early terminates on \dsali due to failed insertions (Table~\ref{tab:fail:com}). For \formal{find}, \megakv achieves the best performance as it only has two hash functions. This explains why \voter is slower since we use three hash tables and additional IO lookups are required for each \formal{find}. Both \megakv and \voter are faster than \cudpp and \linear since they employs the bucket mechanism for storing multiple KV pairs contiguously under the same hash value, which exhibits better coalesced memory access.  
+
+For interested readers, please find the throughput results for varying the filled factor across all datasets in the appendix (Figure~\ref{fig:static:all:insert} and~\ref{fig:static:all:search}). 
+
+
+\vspace{1mm}\noindent\textbf{GPU Profiling.} To further study the behavior of the approaches, we present three types of profiling results for all \formal{insert} GPU kernels in Figure~\ref{fig:static:profile}.
+For \emph{warp efficiency}, \voter maintains a stable rate at around 70\%, which is significantly higher than the other two cuckoo hash approaches: \megakv and \cudpp.  
+We attribute this phenomenon to the voter mechanism proposed in Section~\ref{sec:vot:con}, which yields better overall load balancing. 
+\linear could achieve higher warp efficiency than \voter, but is very volatile for different datasets. This is because each \formal{insert} in \linear may require scanning varying number of hash values for distinct data distributions. 
+For example, in the \dsali dataset, its warp efficiency drops below 40\% since \dsali contains more duplicated keys than other datasets. 
+
+Looking at \emph{cache} and \emph{memory bandwidth} profiling results, \megakv and \voter achieve better utilization as they employ the bucket mechanism.
+As \voter always needs to use atomicCAS to lock a bucket before accessing it, its utilization is inferior than that of \megakv due to the additional IO when inserting a KV pair to a bucket. In addition, atomicCAS is less efficient than atomicExch as it involves more workloads per operation (see Table~\ref{fig:atomic}). Nevertheless, implementations based on atomicExch only supports KV pair with 64 bits, whereas adopting atomicCAS in \voter can support arbitrary length. 
+It is also noted that, even though \megakv has great cache utilization due to the use of atomicExch accessing buckets directly, the overall performance is bounded by device memory IOs. In summary, \voter supports more general hash tables and achieve competitive efficiency against the compared GPU baselines. 
+
+\begin{figure}[t]
 	\begin{minipage}{0.48\linewidth}\centering
 	\includegraphics[width=\linewidth]{pic/static/static_insert.eps}
 	\centerline{\formal{insert}}
@@ -126,94 +151,40 @@ The settings of the aforementioned parameters could be found in Table~\ref{tbl:p
 		\includegraphics[width=\linewidth]{pic/static-profi/warp.eps}
 		\centerline{Warp Efficiency}
 	\end{minipage}
+\hfill
+\begin{minipage}{0.3\linewidth}\centering
+	\includegraphics[width=\linewidth]{pic/static-profi/L2-read.eps}
+	\centerline{Cache Utilization}
+\end{minipage}
 	\hfill
 	\begin{minipage}{0.3\linewidth}\centering
 	\includegraphics[width=\linewidth]{pic/static-profi/memory-read.eps}
 	\centerline{Memory Bandwidth Utilization}
 	\end{minipage}
-	\hfill
-	\begin{minipage}{0.3\linewidth}\centering
-	\includegraphics[width=\linewidth]{pic/static-profi/L2-read.eps}
-	\centerline{Cache Utilization}
-	\end{minipage}
-	\caption{Profiling the \formal{insert} performance for all compared approaches when varying the standard deviation $\sigma$.}
-	\label{fig:static}
+	\caption{GPU profiling results for static hashing comparison.}
+	\label{fig:static:profile}
 \end{figure*}
 
-\begin{figure*}[h]
-	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/static-upper/upper_insert_twitter.eps}
-		\centerline{TW}
-	\end{minipage}
-	\hfill
-	\begin{minipage}{0.19\linewidth}\centering
-	\includegraphics[width=\linewidth]{pic/static-upper/upper_insert_reddit.eps}
-	\centerline{RE}
-	\end{minipage}
-	\hfill
-	\begin{minipage}{0.19\linewidth}\centering
-	\includegraphics[width=\linewidth]{pic/static-upper/upper_insert_tpch.eps}
-	\centerline{LINE}
-	\end{minipage}
-	\hfill
-        \begin{minipage}{0.19\linewidth}\centering
-	\includegraphics[width=\linewidth]{pic/static-upper/upper_insert_random.eps}
-	\centerline{RAND}
-	\end{minipage}
-	\hfill
-	\begin{minipage}{0.19\linewidth}\centering
-	\includegraphics[width=\linewidth]{pic/static-upper/upper_insert_ali.eps}
-	\centerline{COM}
-	\end{minipage}
-	\caption{Throughputs of insert for varying $\beta$.}
-	\label{fig:static}
-\end{figure*}
-\begin{figure*}[h]
-	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/static-upper/upper_search_twitter.eps}
-		\centerline{TW}
-	\end{minipage}
-	\hfill
-	\begin{minipage}{0.19\linewidth}\centering
-	\includegraphics[width=\linewidth]{pic/static-upper/upper_search_reddit.eps}
-	\centerline{RE}
-	\end{minipage}
-	\hfill
-	\begin{minipage}{0.19\linewidth}\centering
-	\includegraphics[width=\linewidth]{pic/static-upper/upper_search_tpch.eps}
-	\centerline{LINE}
-	\end{minipage}
-	\hfill
-        \begin{minipage}{0.19\linewidth}\centering
-	\includegraphics[width=\linewidth]{pic/static-upper/upper_search_random.eps}
-	\centerline{RAND}
-	\end{minipage}
-	\hfill
-	\begin{minipage}{0.19\linewidth}\centering
-	\includegraphics[width=\linewidth]{pic/static-upper/upper_search_ali.eps}
-	\centerline{COM}
-	\end{minipage}
-	\caption{Throughputs of search for varying $\beta$.}
-	\label{fig:static}
-\end{figure*}
 
-\begin{minipage}{\textwidth}
- \begin{minipage}[t]{0.45\textwidth}
-  \centering
-     \makeatletter\def\@captype{table}\makeatother\caption{The failure of TW.}
+
+\begin{table}[H]
+ 	\caption{The failure of TW.}
+	\centering
        \begin{tabular}{|c|c|c|c|c|c|}
 		\hline
-		           & 0.75 & 0.8 & 0.85 & 0.9 & 0.95\\ \hline
+		       & 0.75 & 0.8 & 0.85 & 0.9 & 0.95\\ \hline
 		Linear &0.00\% & 0.00\% &0.00\%  & 0.00\% & 0.39\% \\ \hline
 		CUDPP & 0.00\% & 0.00\% &0.00\%  & 0.00\% & 0.00\% \\ \hline
 		MegaKV & 0.34\% & 0.56\% &0.89\%  & 1.37\% & 2.02\% \\ \hline
 		DyHash &0.00\% & 0.00\% &0.00\%  & 0.00\% & 0.00\% \\ \hline
 	\end{tabular}
-  \end{minipage}
-  \begin{minipage}[t]{0.45\textwidth}
-   \centering
-        \makeatletter\def\@captype{table}\makeatother\caption{The failure of RE.}
-        \begin{tabular}{|c|c|c|c|c|c|}
+	\label{tab:fail:tw}
+\end{table}
+
+\begin{table}[H]
+	\caption{The failure of RE.}
+	\centering
+    \begin{tabular}{|c|c|c|c|c|c|}
 		\hline
 		           & 0.75 & 0.8 & 0.85 & 0.9 & 0.95\\ \hline
 		Linear &0.01\% & 0.02\% &0.01\%  & 0.02\% & 1.97\% \\ \hline
@@ -221,44 +192,56 @@ The settings of the aforementioned parameters could be found in Table~\ref{tbl:p
 		MegaKV & 0.51\% & 0.88\% &1.45\%  & 2.31\% & 3.51\% \\ \hline
 		DyHash &0.00\% & 0.00\% &0.00\%  & 0.00\% & 0.00\% \\ \hline
 	\end{tabular}
-   \end{minipage}
-    \begin{minipage}[t]{0.45\textwidth}
-   \centering
-        \makeatletter\def\@captype{table}\makeatother\caption{The failure of RAND.}
-        \begin{tabular}{|c|c|c|c|c|c|}
+	\label{tab:fail:re}
+\end{table}
+
+\begin{table}[H]
+	\caption{The failure of LINE.}
+	\centering
+	\begin{tabular}{|c|c|c|c|c|c|}
 		\hline
-		           & 0.75 & 0.8 & 0.85 & 0.9 & 0.95\\ \hline
-		Linear &0.00\% & 0.00\% &0.00\%  & 0.00\% & 1.96\% \\ \hline
-		CUDPP & 0.00\% & 0.00\% &0.00\%  & 0.00\% & 0.00\% \\ \hline
-		MegaKV & 0.42\% & 0.79\% &1.41\%  & 2.41\% & 3.90\% \\ \hline
-		DyHash &0.00\% & 0.00\% &0.00\%  & 0.00\% & 0.00\% \\ \hline
-	\end{tabular}
-   \end{minipage}
-    \begin{minipage}[t]{0.45\textwidth}
-   \centering
-        \makeatletter\def\@captype{table}\makeatother\caption{The failure of LINE.}
-        \begin{tabular}{|c|c|c|c|c|c|}
-		\hline
-		           & 0.75 & 0.8 & 0.85 & 0.9 & 0.95\\ \hline
+		& 0.75 & 0.8 & 0.85 & 0.9 & 0.95\\ \hline
 		Linear &0.00\% & 0.00\% &0.00\%  & 0.00\% & 0.39\% \\ \hline
 		CUDPP & 0.00\% & 0.00\% &0.00\%  & 0.00\% & 0.00\% \\ \hline
 		MegaKV & 0.46\% & 0.84\% &1.47\%  & 2.45\% & 3.87\% \\ \hline
 		DyHash &0.00\% & 0.00\% &0.00\%  & 0.00\% & 0.00\% \\ \hline
 	\end{tabular}
-   \end{minipage}
-    \begin{minipage}[t]{0.45\textwidth}
-   \centering
-        \makeatletter\def\@captype{table}\makeatother\caption{The failure of COM.}
-       \begin{tabular}{|c|c|c|c|c|c|}
+	\label{tab:fail:line}
+\end{table}
+
+\begin{table}[H]
+	\caption{The failure of RAND.}
+	\centering
+	\begin{tabular}{|c|c|c|c|c|c|}
 		\hline
-		           & 0.75 & 0.8 & 0.85 & 0.9 & 0.95\\ \hline
+		& 0.75 & 0.8 & 0.85 & 0.9 & 0.95\\ \hline
+		Linear &0.00\% & 0.00\% &0.00\%  & 0.00\% & 1.96\% \\ \hline
+		CUDPP & 0.00\% & 0.00\% &0.00\%  & 0.00\% & 0.00\% \\ \hline
+		MegaKV & 0.42\% & 0.79\% &1.41\%  & 2.41\% & 3.90\% \\ \hline
+		DyHash &0.00\% & 0.00\% &0.00\%  & 0.00\% & 0.00\% \\ \hline
+	\end{tabular}
+	\label{tab:fail:rand}
+\end{table}
+
+\begin{table}[H]
+	\caption{The failure of COM.}
+	\centering
+	\begin{tabular}{|c|c|c|c|c|c|}
+		\hline
+		& 0.75 & 0.8 & 0.85 & 0.9 & 0.95\\ \hline
 		Linear &0.00\% & 0.00\% &0.00\%  & 0.00\% & 0.03\% \\ \hline
 		CUDPP & 0.01\% & 0.01\% &0.01\%  & 0.01\% & 0.01\% \\ \hline
 		MegaKV & 0.06\% & 0.80\% &1.01\%  & 1.27\% & 1.55\% \\ \hline
 		DyHash &0.00\% & 0.00\% &0.00\%  & 0.00\% & 0.00\% \\ \hline
 	\end{tabular}
-   \end{minipage}
-\end{minipage}
+	\label{tab:fail:com}
+\end{table}
+
+
+
+
+
+
 
 
 \subsection{Dynamic Hashing Comparison}\label{sec:exp:dynamic}
