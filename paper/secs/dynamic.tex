@@ -13,8 +13,8 @@ Finally, we present how to efficiently rehash and relocate the data after the ta
 
 \subsection{Structure Resizing}\label{sec:dyn:resize}
 To efficiently utilize memory space, we resize the hash tables when the filled factor falls out of the desired range, e.g., $[\alpha,\beta]$.
-One possible strategy is to double or half all hash tables and to then rehash all KV pairs. However, this simple strategy renders poor memory utilization and 
-excessive overheads for rehashing. First, doubling the size of the hash tables results in filled factor immediately cut to half, while downsizing the hash tables to half the size followed by rehashing could only be efficient when the filled factor is significantly low (e.g., $40\%$), both of which scenarios are not resource friendly. Second, rehashing all KV pairs is expensive and it hurts the performance stability for some streaming applications since the entire hash table is subject to locking. 
+One possible strategy is to double or half all hash tables and to then rehash all KV pairs. However, this simple strategy renders inefficient memory utilization and 
+excessive overheads for rehashing. First, doubling the size of the hash tables results in filled factor immediately cut to half, while downsizing the hash tables to half the size followed by rehashing could only be efficient when the filled factor is significantly low (e.g., $40\%$), both of which scenarios are not memory friendly. Second, rehashing all KV pairs is expensive and it hurts the performance stability for some streaming applications since the entire hash table is subject to locking. 
 
 We propose an alternative strategy, illustrated in Figure~\ref{fig:resize}. 
 Given $d$ hash tables depicted in Figure~\ref{fig:resize},

@@ -7,12 +7,12 @@
 \end{figure}
 
 \section{Voter-based GPU Cuckoo Hash}\label{sec:vot}
-In this section, we first present a overview of the hash table structure and pinpoint a number of important design principles in Section~\ref{sec:vot:has}.
+In this section, we first present a overview of the hash table structure and pinpoint a number of important design objectives in Section~\ref{sec:vot:has}.
 Subsequently, in Section~\ref{sec:vot:con}, we give details on how to perform updates with the \emph{voter} coordination, i.e., \formal{find}, \formal{insert} and \formal{delete}, for the case where hash table resizing is not required. 
 We leave how to handle the fully dynamic scenario in Section~\ref{sec:dyn} for further discussions. 
 
 \subsection{Hash Table Structure}\label{sec:vot:has}
-Adopted from cuckoo hashing \cite{pagh2004cuckoo}, we build $d$ hash tables with $d$ unique hash functions: $h^1,h^2,\ldots,h^d$. 
+Adopted from cuckoo hashing \cite{}, we build $d$ hash tables with $d$ unique hash functions: $h^1,h^2,\ldots,h^d$. 
 In this work, we use a set of simple universal hash function such as $h^i(k) = (a_i\cdot k + b_i \mod p) \mod |h^i|$.
 $a_i,b_i$ are random integers, $p$ is a large prime.
 There are three major advantages for adopting cuckoo hashing on GPUs. 
@@ -33,7 +33,7 @@ The values could take much larger memory space than the keys.
 Thus, storing keys and values separately avoid the overhead of memory access when accessing the values are not necessary, 
 e.g., finding a nonexistent KV pair or deleting a KV pair. 
 
-For keys having size larger than 4 bytes, a simple strategy is to store less KV pairs in a bucket. For example, if the keys are 8-types, then a bucket can accommodate 16 KV pairs. In the worst case, a key taking 128 bytes occupy one bucket alone, which is unnecessary large in practice.
+For keys having size larger than 4 bytes, a simple strategy is to store less KV pairs in a basket. For example, if the keys are 8-types, then a basket can accommodate 16 KV pairs. In the worst case, a key taking 128 bytes occupy one basket alone, which is unnecessary large in practice.
 
 
 \begin{algorithm}[t]
@@ -78,31 +78,6 @@ Then, each thread in the warp (a thread lane $l$) simultaneously searches the ke
 	\label{fig:atomic}
 \end{figure}
 
-
-
-\vspace{1mm}\noindent\textbf{Insert.} Contention occurs when multiple \formal{insert} operations target at the same bucket. 
-There are two contrasting objectives for resolving the contention. On one hand, we want to utilize the warp-centric approach to access a bucket.
-On the other hand, a warp requires a mutex when updating a bucket to avoid corruption, and the locking is expensive on GPUs.  
-In the literature, it is a common practice to use atomic operations for implementing a mutex under the warp-centric approach \cite{zhang2015mega}. 
-In particular, we can still invoke a warp to insert a KV pair. The warp is required to acquire a lock before updating the corresponding bucket. 
-The warp will keep trying to acquire the lock before successfully obtain the control. 
-There are two drawbacks for this direct warp-centric approach. 
-First, the conflicting warps are spinning while locking, thus wasting computing resources.
-Second, although atomic operations are supported by recent GPU architectures natively, 
-they become costly when the number of atomic operations issuing at the same location increases. 
-In Figure~\ref{fig:atomic}, we show the profiling statistics for two atomic operations which are often used to lock and unlock a mutex: atomicCAS and atomicExch respectively. 
-We compare the throughputs of the atomic operations vs. an equivalent amount of sequential device memory IOs (coalesced) and present the trend for varying the number of conflicting atomic operations. It is apparent that the atomic performance has seriously degraded when a larger number of conflicts occur. 
-Thus, it will be expensive for the direct warp-centric approach in the contention critical cases. 
-Imaging one wants to track the number of retweets posted to active twitter accounts in the current month, via storing the twitter ID and the obtained retweet counts as KV pairs. In this particular scenario, certain twitter celerities could receive thousands of retweets in a very short period. 
-This triggers the same twitter ID gets updated frequently and a serious number of conflicts would happen. 
-
-To alleviate the cost of spinning, we propose the voter-coordination scheme. 
-We assign an \formal{insert} to a thread rather than using a warp to handle the operation. Before submitting a locking request and updating the corresponding bucket, the thread will participate in a vote among the threads in the same warp. 
-The winner thread $l$ becomes the leader of the warp and takes control. Subsequent, the warp inspects the bucket and insert the KV for $l$ if there are spaces left, upon $l$ successfully obtaining the lock.
-If $l$ fails to get the lock, the warp revotes another leader to avoid locking on the same bucket.
-Compared with locking on atomic operations, the cost of warp voting is almost negligible since it is heavily optimized in the GPU architecture.  
-
-
 \begin{algorithm}[t]
 	\begin{algorithmic}[1]
 		\State $active \gets 1$	\label{algo:insert:active:start}
@@ -137,6 +112,29 @@ Compared with locking on atomic operations, the cost of warp voting is almost ne
 	\caption{\textbf{Insert}(lane $l$, warp $wid$, kv $(k,v)$, table $i$)}\label{algo:insert}
 \end{algorithm}
 
+\vspace{1mm}\noindent\textbf{Insert.} Contention occurs when multiple \formal{insert} operations target at the same bucket. 
+There are two conflicting objectives for resolving the contention. On one hand, we want to utilize the warp-centric approach to access a bucket.
+On the other hand, a warp requires a mutex when updating a bucket to avoid corruption, and the locking is expensive on GPUs.  
+In the literature, it is a common practice to use atomic operations for implementing a mutex under the warp-centric approach \cite{zhang2015mega}. 
+In particular, we can still invoke a warp to insert a KV pair. The warp is required to acquire a lock before updating the corresponding bucket. 
+The warp will keep trying to acquire the lock before successfully obtain the control. 
+There are two drawbacks for this direct warp-centric approach. 
+First, the conflicting warps are spinning while locking, thus wasting computing resources.
+Second, although atomic operations are supported by recent GPU architectures natively, 
+they become costly when the number of atomic operations issuing at the same location increases. 
+In Figure~\ref{fig:atomic}, we show the profiling statistics for two atomic operations which are often used to lock and unlock a mutex: atomicCAS and atomicExch respectively. 
+We compare the throughputs of the atomic operations vs. an equivalent amount of sequential device memory IOs (coalesced) and present the trend for varying the number of conflicting atomic operations. It is apparent that the atomic performance has seriously degraded for a larger number of conflicts. 
+Thus, it will be expensive for the direct warp-centric approach in the contention critical cases. 
+Imaging one wants to track the number of retweets posted to active twitter accounts in the current month, via storing the twitter ID and the obtained retweet counts as KV pairs. In this particular scenario, certain twitter celerities could receive thousands of retweets in a very short period. 
+This triggers the same twitter ID gets updated frequently and a serious number of conflicts would happen. 
+
+To alleviate the cost of spinning, we propose the voter-coordination scheme. 
+We assign an \formal{insert} to a thread rather than using a warp to handle the operation. Before submitting a locking request and updating the corresponding bucket, the thread will participate in a vote among the threads in the same warp. 
+The winner thread $l$ becomes the leader of the warp and takes control. Subsequent, the warp inspects the bucket and insert the KV for $l$ if there are spaces left, upon $l$ successfully obtaining the lock.
+If $l$ fails to get the lock, the warp revotes another leader to avoid locking on the same bucket.
+Compared with locking on atomic operations, the cost of warp voting is almost negligible since it is heavily optimized in the GPU architecture.  
+
+
 Parallel insertion with the voter coordination scheme is presented in Algorithm~\ref{algo:insert}.
 The pseudo code demonstrates how a thread (with lane $l$) from warp $wid$ inserts a KV $(k,v)$ to the $i$th hash table. 
 The warp will first propose a vote among active threads and the process will terminate if all threads finish their tasks (lines~\ref{algo:insert:active:start}-\ref{algo:insert:active:end}).  
@@ -148,9 +146,8 @@ Once a thread finds $k'$ or an empty space in the bucket, $l'$ will add or updat
 Otherwise there is no space left, $l'$ swaps $(k',v')$ with a random KV in the bucket and inserts the evicted KV to hash table $i+1$ in the next round. 
 In summary, each iteration of the loop presented in Algorithm~\ref{algo:insert} issues $1$ atomic operation and at most $1$ device memory read/write (lines~\ref{algo:insert:vote:start}-\ref{algo:insert:loop:end}).  
 
-Note that we have yet covered how to choose the hash table index $i$ for each insertion (Algorithm~\ref{algo:insert}). Additional number of conflicts would happen if all threads attempting to insert to the same table. For the flow of presentation, we leave the discussion to Section~\ref{sec:dyn} since choosing the hash table is more coherent to the load balancing problem for resizing hash tables. 
-%Moreover, a careful reader would find that the insertion process could lead to multiple appearances of the same key in different hash tables. To fill this gap, one can attach a timestamp to the insertion batch.
-%Hence, the \formal{find} operation is required to scan all $d$ buckets of the same key and extracts the one with the latest timestamp.
+Note that we have yet covered how to choose the hash table index $i$ for each insertion (Algorithm~\ref{algo:insert}). Additional number of conflicts would happen if all threads attempting to insert to the same table. For the flow of presentation, we leave the discussion to Section~\ref{sec:dyn} since choosing the hash table is more coherent to the load balancing problem for resizing hash tables. Moreover, a careful reader would find that the insertion process could lead to multiple appearances of the same key in different hash tables. To fill this gap, one can attach a timestamp to the insertion batch.
+Hence, the \formal{find} operation is required to scan all $d$ buckets of the same key and extracts the one with the latest timestamp.
 
 \begin{figure}[t]
 	\centering
@@ -189,7 +186,7 @@ thus causes no contention.
 \vspace{1mm}\noindent\textbf{Complexity.}
 Since a \formal{find}, \formal{insert} and \formal{delete} operation is independently executed by a thread. 
 The analysis of a single thread complexity is the same as the sequential version of cuckoo hashing \cite{pagh2004cuckoo}: $O(1)$ worst case complexity for \formal{find} and \formal{delete}, $O(1)$ expected time for \formal{insert} for the case of 2 hash tables. 
-It has been pointed out that analyzing the theoretical upper bound complexity of insertion in $d \geq 3$ hash tables is hard \cite{alcantara2009real}.  
+It has been pointed out that analyzing the theoretical upper bound complexity of insertion in $d \geq 3$ hash tables is very difficult \cite{alcantara2009real}.  
 Nevertheless, empirical results have shown that increasing the number of tables leads to better insertion performance, see our experiments in Section~\ref{sec:exp}.
 Thus, we assume the complexity for inserting to $d$ hash tables is the same as that of $2$ has tables, as long as $d$ keeps constant.  
 
