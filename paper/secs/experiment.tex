@@ -7,16 +7,16 @@ We will introduce the experimental setup and the discuss the results.
 \vspace{1mm}\noindent\textbf{Baselines.} We compare the proposed approach in this paper with several state-of-the-art hash table implementations on GPUs and CPUs. 
 \begin{itemize}
 	\item \cudpp is a popular CUDA primitive library which contains the cuckoo hash table implementation published in~\cite{alcantara2009real}. 
-	\cudpp employs four hashing function and each hash value stores only one KV pair with 64 bits size (32 bits for key and 32 bits for value). 
+	\cudpp employs four hashing function and each hash value location stores one KV pair with 64 bits size (32 bits for key and 32 bits for value). 
 	\cudpp only supports \formal{insert} and \formal{find} operations. 
 	\item \megakv is a state-of-the-art approach for GPU-based key value store published in~\cite{zhang2015mega}. It employs a cuckoo hash with two hash functions.
 	\megakv also allocates a bucket for each hash value. However, it does not lock a bucket when performing update. Instead, it uses intra-block synchronization to resolve race condition. 
-	\item \linear is a GPU-based hash table which uses linear open addressing to resolve conflicts \cite{hong2010mapcg}. 
+	\item \linear is a GPU-based hash table which uses linear open addressing to resolve conflicts \cite{hong2010mapcg}. Similar to \cudpp, each hash value location stores one KV pair with 64 bits size.
 	\item \google is an efficient CPU-based hash table implementation\footnote{https://github.com/sparsehash/sparsehash-c11/}. We choose the \emph{dense\_hash\_map} implementation since it provides the best efficiency.
 	\item \voter is the approach proposed in this paper.
 \end{itemize}
 We adopt the original implementations of \cudpp and \google from their corresponding inventors. 
-For \megakv, we note that its intra-block synchronization could lead to inconsistency issue as well as a large number of insertion failures, especially when the filled factor is high.  
+For \megakv, we note that its intra-block synchronization could lead to concurrent corrupted issue as well as a large number of insertion failures, especially when the filled factor is high.  
 Thus, we revise its code by replacing the intra-block synchronization with atomicExch to resolve the race condition. The adoption of atomicExch preserves the design principle of \megakv for \emph{not} locking the entire bucket for updates. Moreover, it leads to less insertion failures and similar performance against its original implementation. 
 For \linear, we implement the CUDA version of the algorithm proposed in \cite{hong2010mapcg}.
 
@@ -72,8 +72,8 @@ In particular, we insert all KV pairs from the datasets followed by issuing 1 mi
 
 \vspace{1mm}\noindent\textbf{Dynamic Hashing Comparison (Section~\ref{sec:exp:dynamic}).}
 Under the dynamic setting, we generate the workloads by batching the hash table operations. 
-We partition the datasets into batches of $1$ million insertions. 
-For each batch, we augment $1$ million \formal{find} operations and $1 \cdot r$ million \formal{delete} operations,
+We partition the datasets into batches of $1$ million insertions each. 
+For one batch, we augment $1$ million \formal{find} operations and $1 \cdot r$ million \formal{delete} operations,
 where $r$ is a parameter to balance insertions and deletions.
 After we exhaust all the batches obtained from the datasets, we rerun these batches by swapping the \formal{insert} and \formal{delete} operations in any batch. 
 We evaluate the performance of all compared approaches except \cudpp as it does not support deletions. 
@@ -98,7 +98,7 @@ The throughput of \formal{insert} increases with more hash tables, since there a
 In this paper, we choose three hash tables as our default implementation as it provides the best balance. 
 
 
-\begin{figure}[h]
+\begin{figure}[t]
 \begin{minipage}{0.48\linewidth}\centering
 	\includegraphics[width=\linewidth]{pic/tunning/tunning-insert.eps}
 	\centerline{\formal{insert}}
@@ -114,7 +114,7 @@ In this paper, we choose three hash tables as our default implementation as it p
 
 \subsection{Static Hashing Comparison}\label{sec:exp:static}
 
-\vspace{1mm}\noindent\textbf{Throughput Analysis.} We present the throughput of all compared approaches in Figure~\ref{fig:static} when varying the filled factor. 
+\vspace{1mm}\noindent\textbf{Throughput Analysis.} We present the throughput of all compared approaches in Figure~\ref{fig:static} under the default filled factor. 
 First of all, GPU-based approaches are orders of magnitude faster than \google (2  million ops for \formal{insert} and 6 million ops for \formal{find} on average), which validates the motivation of designing hash tables on GPUs. 
 Among GPU hash tables, \megakv delivers the best performance across all datasets except for \dsali. Nevertheless, for \formal{insert}, the drawbacks of \megakv is that it fails to insert some of the KV pairs. Tables~\ref{tab:fail:tw}-\ref{tab:fail:com} present the percentages of insertion failure across all datasets. \megakv has up to 2.45\% failure rate for the default filled factor, which is the highest among all approaches. 
 Our proposed \voter has zero failure rate and achieve the 2nd best performance behind \megakv. We note that \cudpp obtains a significant advantage over all approaches in the \dsali dataset. This is because \cudpp will immediately terminate its GPU kernel once it finds some KV pairs cannot be inserted after a number of lookups. This explains why \cudpp has a superior performance since it early terminates on \dsali due to failed insertions (Table~\ref{tab:fail:com}). For \formal{find}, \megakv achieves the best performance as it only has two hash functions. This explains why \voter is slower since we use three hash tables and additional IO lookups are required for each \formal{find}. Both \megakv and \voter are faster than \cudpp and \linear since they employs the bucket mechanism for storing multiple KV pairs contiguously under the same hash value, which exhibits better coalesced memory access.  
