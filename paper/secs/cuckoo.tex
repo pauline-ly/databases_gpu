@@ -15,6 +15,7 @@ We leave how to handle the fully dynamic scenario in Section~\ref{sec:dyn} for f
 Adopted from cuckoo hashing \cite{pagh2004cuckoo}, we build $d$ hash tables with $d$ unique hash functions: $h^1,h^2,\ldots,h^d$. 
 In this work, we use a set of simple universal hash function such as $h^i(k) = (a_i\cdot k + b_i \mod p) \mod |h^i|$.
 $a_i,b_i$ are random integers, $p$ is a large prime.
+Note that the proposed approaches in this paper also apply to other hash functions as well. 
 There are three major advantages for adopting cuckoo hashing on GPUs. 
 First, it avoids chaining by inserting the elements into alternative locations if collision happens. As discussed in Section~\ref{sec:rel}, 
 chaining present several issues which are not friendly to the GPU architecture.  
@@ -33,7 +34,9 @@ The values could take much larger memory space than the keys.
 Thus, storing keys and values separately avoid the overhead of memory access when accessing the values are not necessary, 
 e.g., finding a nonexistent KV pair or deleting a KV pair. 
 
-For keys having size larger than 4 bytes, a simple strategy is to store less KV pairs in a bucket. For example, if the keys are 8-types, then a bucket can accommodate 16 KV pairs. In the worst case, a key taking 128 bytes occupy one bucket alone, which is unnecessary large in practice.
+For keys having size larger than 4 bytes, a simple strategy is to store less KV pairs in a bucket. Suppose the keys are 8-types, a bucket can then accommodate 16 KV pairs. 
+As we will discussed later in this section, we lock the entire bucket exclusively for a warp to perform insertion/deletion using intra warp synchronization primitives. Thus, we do not limit ourselves to supporting KV pairs with only 64 bits. 
+In the worst case, a key taking 128 bytes occupy one bucket alone, which is unnecessary large in practice.
 
 
 \begin{algorithm}[t]
@@ -154,7 +157,7 @@ Note that we have yet covered how to choose the hash table index $i$ for each in
 
 \begin{figure}[t]
 	\centering
-	\includegraphics[width=0.45\textwidth]{fig/Voter.pdf}
+	\includegraphics[width=0.48\textwidth]{fig/Voter.pdf}
 	\caption{Example for parallel insertions}
 	\label{fig:voter}
 \end{figure}
@@ -169,8 +172,7 @@ We give the following example to demonstrate the parallel insertion process.
 \end{example}
 
 \vspace{1mm}\noindent\textbf{Delete.} The \formal{delete} operation, in contrast to \formal{insert}, does not require locking with a warp-centric approach. 
-Similar to \formal{find}, we assign a warp to process a key $k$ on deletion. The warp iterates through the buckets among all $d$ hash tables that could possibly contain $k$. Each thread lane in the warp is responsible for inspecting one position in a bucket independently, and only erase the key if $k$ is found, 
-thus causes no contention.
+Similar to \formal{find}, we assign a warp to process a key $k$ on deletion. The warp iterates through the buckets among all $d$ hash tables that could possibly contain $k$. Each thread lane in the warp is responsible for inspecting one position in a bucket independently, and only erase the key if $k$ is found, thus causes no conflict.
 
 %\begin{algorithm}[t]
 %	\begin{algorithmic}[1]
