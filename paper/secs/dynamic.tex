@@ -8,7 +8,7 @@
 
 In this section, we focus on how to dynamically update the hash tables according to the actual data size. 
 We introduce our strategy how to resize the table in Section~\ref{sec:dyn:resize}.
-In section~\ref{sec:dyn:distribute}, we discuss how to distribute the KV pairs for better load balancing. 
+In section~\ref{sec:dyn:distribute}, we discuss how to distribute the KV pairs for better load balancing with theoretical guarantees. 
 Finally, we present how to efficiently rehash and relocate the data after the tables have been resized in Section~\ref{sec:dyn:rehash}. 
 
 \subsection{Structure Resizing}\label{sec:dyn:resize}
@@ -65,12 +65,12 @@ given there are $m_i$ elements in table $i$ before the batch of insertion contai
 
 \subsection{Rehashing}\label{sec:dyn:rehash}
 Rehashing relocates the KV pairs after the hash tables are resized. An efficient relocation process maximizes the utilization of device memory bandwidth and minimizes thread conflicts. 
-We discuss two scenarios for rehashing: \emph{upsizing} and \emph{downsizing}.
+We discuss two scenarios for rehashing: \emph{upsizing} and \emph{downsizing}. Both scenarios are processed in one single kernel. 
 
 \begin{figure}[t]
 	\centering
 	\includegraphics[width=0.3\textwidth]{fig/Upsize.pdf}
-	\caption{Illustration for upsizing.}
+	\caption{Illustration for upsizing and downsizing.}
 	\label{fig:upsize}
 \end{figure}
 \vspace{1mm}\noindent\textbf{Upsizing.} 
@@ -89,12 +89,12 @@ Note that after upsizing hash table $h^i$, its filled factor $\theta_i$ is cut t
 \vspace{1mm}\noindent\textbf{Downsizing.}
 Downsizing the hash table $h^i$ is a reverse process of upsizing $h^i$. There is always room to relocate KV pairs in the same table for upsizing. 
 In contrast, downsizing may rehash some KV pairs to other hash tables, especially when $\theta_i > 50\%$.
-Since the KV pairs located in $loc$ and $loc+|h^i|/2$ of old subtable are hashed to $loc$ in the new table, there could be cases the KV pairs exceeds the size of a single bucket. 
-Thus, we first assign a warp to accommodate KV pairs that can fit the size of a single bucket. Similarly, it does require locking since there will be no thread conflict on any bucket. 
+Since the KV pairs located in $loc$ and $loc+|h^i|$ are hashed to $loc$ in the new table, there could be cases the KV pairs exceeds the size of a single bucket. 
+Thus, we first assign a warp to accommodate KV pairs that can fit the size of a single bucket. Similarly as upsizing, it does require locking since there will be no thread conflict on any bucket. 
 For the remaining KV pairs which cannot fit in the downsized table, called residuals, we insert them into other subtables using Algorithm~\ref{algo:insert}.
 To make sure no conflict occurs between inserting residuals and processing the downsizing subtable, which are both executed in a single kernel, we exclude the downsizing subtable when inserting the residuals. 
 Take an example when we have three subtables and one of them is being downsized. 
-We invoke Algorithm~\ref{algo:insert} to insert the residuals to the remaining two subtables. 
+We only insert the residuals to the remaining two subtables. 
 
 
 %To safeguard the balancing condition, we devise a different rehashing strategy for downsizing. 

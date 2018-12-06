@@ -94,11 +94,10 @@ We conduct the experiments on an Intel Xeon E5-2620 Server equipped with NVIDIA 
 \subsection{Tunning Parameters}
 
 A key parameter that affects the performance of \voter is the number of hash table chosen. For the static scenario, we present the throughput performance of \formal{insert} and \formal{find} for varying number of hash tables in Figure~\ref{fig:vary-table}, while fixing the memory space of the entire structure to ensure the default filled factor. 
-The throughput of \formal{insert} increases with more hash tables, since there are more alternative locations for inserting a KV pair. However, the marginal improvement drops for a larger number of hash tables. The throughput of \formal{find} falls with more hash tables as additional locations need to be scanned to locate a KV pair. Thus, one can tradeoff the performance between \formal{insert} and \formal{find} operations by varying the number of tables.
-In this paper, we choose three hash tables as our default implementation as it provides the best balance. 
+The throughput of \formal{insert} increases with more hash tables, since there are more alternative locations for inserting a KV pair. However, the marginal improvement drops for a larger number of hash tables. The throughput of \formal{find} falls with more hash tables as additional locations need to be scanned to locate a KV pair. Thus, one can tradeoff the performance between \formal{insert} and \formal{find} operations by varying the number of tables. In this paper, we choose three hash tables as our default implementation as it provides the best balance. 
 
 
-\begin{figure}[h]
+\begin{figure}[t!]
 \begin{minipage}{0.48\linewidth}\centering
 	\includegraphics[width=\linewidth]{pic/tunning/tunning-insert.eps}
 	\centerline{\formal{insert}}
@@ -116,10 +115,43 @@ In this paper, we choose three hash tables as our default implementation as it p
 
 \vspace{1mm}\noindent\textbf{Throughput Analysis.} We present the throughput of all compared approaches in Figure~\ref{fig:static} when varying the filled factor. 
 First of all, GPU-based approaches are orders of magnitude faster than \google (2  million ops for \formal{insert} and 6 million ops for \formal{find} on average), which validates the motivation of designing hash tables on GPUs. 
-Among GPU hash tables, \megakv delivers the best performance across all datasets except for \dsali. Nevertheless, for \formal{insert}, the drawback of \megakv is that it fails to insert some of the KV pairs. Tables~\ref{tab:fail:tw}-\ref{tab:fail:com} present the percentages of insertion failure across all datasets. \megakv has up to 2.45\% failure rate for the default filled factor, which is the highest among all approaches. 
+Among GPU hash tables, \megakv delivers the best performance across all datasets except for \dsali. Nevertheless, for \formal{insert}, the drawback of \megakv is that it fails to insert some of the KV pairs. Tables~\ref{tab:fail:tw}-\ref{tab:fail:com} present the percentages of insertion failure for varying filled factor across all datasets. \megakv has up to 2.5\% failure rate for the default filled factor, which is the highest among all approaches. 
 Our proposed \voter has the lowest failure rate and achieve the 2nd best performance behind \megakv. We note that \cudpp obtains a significant advantage over all approaches in the \dsali dataset. This is because \cudpp will immediately terminate its GPU kernel once it finds some KV pairs cannot be inserted after a number of lookups. This explains why \cudpp has a superior performance since it early terminates on \dsali due to failed insertions (Table~\ref{tab:fail:com}). For \formal{find}, \megakv achieves the best performance as it only has two hash functions. This explains why \voter is slower since we use three hash tables and additional IO lookups are required for each \formal{find}. Both \megakv and \voter are faster than \cudpp and \linear since they employs the bucket mechanism for storing multiple KV pairs contiguously under the same hash value, which exhibits better coalesced memory access.  
 
+\begin{figure}[t!]
+	\begin{minipage}{0.48\linewidth}\centering
+		\includegraphics[width=\linewidth]{pic/static/static_insert.eps}
+		\centerline{\formal{insert}}
+	\end{minipage}
+	\hfill
+	\begin{minipage}{0.48\linewidth}\centering
+		\includegraphics[width=\linewidth]{pic/static/static_search.eps}
+		\centerline{\formal{find}}
+	\end{minipage}
+	\caption{Throughput of all compared approaches under the static setting.}
+	\label{fig:static}
+\end{figure}
+\begin{figure*}[t]
+	\begin{minipage}{0.3\linewidth}\centering
+		\includegraphics[width=\linewidth]{pic/static-profi/warp.eps}
+		\centerline{Warp Efficiency}
+	\end{minipage}
+	\hfill
+	\begin{minipage}{0.3\linewidth}\centering
+		\includegraphics[width=\linewidth]{pic/static-profi/L2-read.eps}
+		\centerline{Cache Utilization}
+	\end{minipage}
+	\hfill
+	\begin{minipage}{0.3\linewidth}\centering
+		\includegraphics[width=\linewidth]{pic/static-profi/memory-read.eps}
+		\centerline{Memory Bandwidth Utilization}
+	\end{minipage}
+	\caption{GPU profiling results for static hashing comparison.}
+	\label{fig:static:profile}
+\end{figure*}
+
 For interested readers, please find the throughput results for varying the filled factor across all datasets in the appendix (Figure~\ref{fig:static:all:insert} and~\ref{fig:static:all:search}). 
+
 
 
 \vspace{1mm}\noindent\textbf{GPU Profiling.} To further study the behavior of the approaches, we present three types of profiling results for all \formal{insert} GPU kernels in Figure~\ref{fig:static:profile}.
@@ -134,110 +166,8 @@ It is also noted that, even though \megakv has great cache utilization due to th
 
 In summary, under the static environment, \voter achieves competitive efficiency against the compared GPU baselines. Moreover, although \voter does not deliver the best performance over existing approaches, it has zero insertion failure rate and supports more general hash tables.
 
-\begin{figure}[t]
-	\begin{minipage}{0.48\linewidth}\centering
-	\includegraphics[width=\linewidth]{pic/static/static_insert.eps}
-	\centerline{\formal{insert}}
-	\end{minipage}
-	\hfill
-	\begin{minipage}{0.48\linewidth}\centering
-	\includegraphics[width=\linewidth]{pic/static/static_search.eps}
-	\centerline{\formal{find}}
-	\end{minipage}
-	\caption{Throughput of all compared approaches under the static setting.}
-	\label{fig:static}
-\end{figure}
-
-\begin{figure*}[h]
-	\begin{minipage}{0.3\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/static-profi/warp.eps}
-		\centerline{Warp Efficiency}
-	\end{minipage}
-\hfill
-\begin{minipage}{0.3\linewidth}\centering
-	\includegraphics[width=\linewidth]{pic/static-profi/L2-read.eps}
-	\centerline{Cache Utilization}
-\end{minipage}
-	\hfill
-	\begin{minipage}{0.3\linewidth}\centering
-	\includegraphics[width=\linewidth]{pic/static-profi/memory-read.eps}
-	\centerline{Memory Bandwidth Utilization}
-	\end{minipage}
-	\caption{GPU profiling results for static hashing comparison.}
-	\label{fig:static:profile}
-\end{figure*}
 
 
-
-\begin{table}[H]
- 	\caption{The failure of TW (Percentages).}
-	\centering
-       \begin{tabular}{|c|c|c|c|c|c|}
-		\hline
-		       & 0.75 & 0.8 & 0.85 & 0.9 & 0.95\\ \hline
-		Linear &0.0 & 0.0 &4.6e-5  & 1.1e-3 & 3.9e-1 \\ \hline
-		CUDPP & 0.0 & 0.0 &0.0  & 0.0 & 0.0 \\ \hline
-		MegaKV & 3.4e-1 & 5.6e-1 &8.9e-1 & 1.4 & 2.0 \\ \hline
-		DyHash &0.0 & 0.0 &0.0  & 0.0 & 0.0 \\ \hline
-	\end{tabular}
-	\label{tab:fail:tw}
-\end{table}
-
-\begin{table}[H]
-	\caption{The failure of RE (Percentages).}
-	\centering
-    \begin{tabular}{|c|c|c|c|c|c|}
-		\hline
-		           & 0.75 & 0.8 & 0.85 & 0.9 & 0.95\\ \hline
-		Linear &5.6e-3 & 1.5e-2 &1.8e-2  & 2.0e-2 & 2.0 \\ \hline
-		CUDPP & 0.0 & 0.0 &0.0  & 0.0 & 0.0 \\ \hline
-		MegaKV &5.1e-1 & 8.8e-1 &1.5  & 2.3 & 3.5 \\ \hline
-		DyHash &0.0 & 0.0 &0.0  & 1.0e-6 & 1.0e-6 \\ \hline
-	\end{tabular}
-	\label{tab:fail:re}
-\end{table}
-
-\begin{table}[H]
-	\caption{The failure of LINE (Percentages).}
-	\centering
-	\begin{tabular}{|c|c|c|c|c|c|}
-		\hline
-		           & 0.75 & 0.8 & 0.85 & 0.9 & 0.95\\ \hline
-		Linear &0.0 & 0.0 &1.1e-4  & 1.8e-3 & 3.9e-1 \\ \hline
-		CUDPP & 0.0 & 0.0 &0.0  & 0.0 & 0.0 \\ \hline
-		MegaKV &4.6e-1 & 8.4e-1 &1.5  & 2.5 & 3.9 \\ \hline
-		DyHash &0.0 & 0.0 &0.0  & 2.0e-6 & 4.0e-6 \\ \hline
-	\end{tabular}
-	\label{tab:fail:line}
-\end{table}
-
-\begin{table}[H]
-	\caption{The failure of RAND (Percentages).}
-	\centering
-	\begin{tabular}{|c|c|c|c|c|c|}
-		\hline
-		           & 0.75 & 0.8 & 0.85 & 0.9 & 0.95\\ \hline
-		Linear &8.4e-5 & 4.1e-4 &5.7e-4  & 8.7e-4 & 2.0 \\ \hline
-		CUDPP & 0.0 & 0.0 &0.0  & 0.0 & 0.0 \\ \hline
-		MegaKV &4.2e-1 & 7.9e-1 &1.4  & 2.4 & 3.9 \\ \hline
-		DyHash &0.0 & 0.0 &0.0  & 0.0 & 0.0 \\ \hline
-	\end{tabular}
-	\label{tab:fail:rand}
-\end{table}
-
-\begin{table}[H]
-	\caption{The failure of COM (Percentages).}
-	\centering
-	\begin{tabular}{|c|c|c|c|c|c|}
-		\hline
-		           & 0.75 & 0.8 & 0.85 & 0.9 & 0.95\\ \hline
-		Linear &0.0 & 0.0 &2.0e-5  & 6.5e-4 & 2.5e-2 \\ \hline
-		CUDPP & 0.0 & 0.0 &0.0  & 0.0 & 0.0 \\ \hline
-		MegaKV &6.1e-2 & 8.0e-1 &1.0  & 1.3 & 1.5 \\ \hline
-		DyHash &0.0 & 0.0 &0.0  & 0.0 & 7.1e-4 \\ \hline
-	\end{tabular}
-	\label{tab:fail:com}
-\end{table}
 
 
 \subsection{Dynamic Hashing Comparison}\label{sec:exp:dynamic}
@@ -247,11 +177,13 @@ We vary the lower bound of the filled factor and report the results in Figure~\r
 The performance is measured by the total running time for processing all batches described in Section~\ref{sec:exp:setup}. Furthermore, we indicate the time taken for all components involved in the processing: \formal{insert}, \formal{find}, \formal{delete} and \formal{resize}. Apparently, the resizing strategy adopted by \linear and \megakv incur significant overhead. Such an overhead grows dramatically for a higher $\alpha$ since more downsizing is required. It is noted that the impact of resizing is the more significant for \megakv than \linear. We interpret the phenomenon as the following.
 \megakv has a higher insertion failure rate than that of \linear (see Table~\ref{tab:fail:tw}-\ref{tab:fail:com}). Thus \megakv triggers more upsizing operations leading to a lower filled ratio when resized. As each processing batch contains deletions, \megakv is prone to downsizing when the filled factor falls below $\alpha$ after deletions materialize.
 The overhead of repeated upsizing and downsizing severely degrades the performance of \megakv, for the major reason of maintaining the filled factor above $\alpha$. 
-In contrast, \voter achieves significant speedups over \linear and \megakv (up to \xxx and \xxx faster respectively under the default setting). There are two reasons behind the results. First, \voter has near-zero failure rate and thus does not incur unnecessary upsizing and downsizing operations. Second, \voter employs the resizing strategy (proposed in Section~\ref{sec:dyn}) by only relocating the entries in one subtable efficiently. 
+The only exception is where $\alpha$ is very small (i.e., $\alpha=0.25$) and \megakv does not need to perform downsize regularly. However, small $\alpha$ means the hash table is mostly empty and thus wastes GPU memory resources.
+In contrast, \voter achieves significant speedups over \linear and \megakv (up to \xxx and \xxx faster respectively under the default setting). 
+\voter can support even larger $\alpha$ (i.e., $\beta\cdot\frac{d}{d+1}$) but we omit the results since the baselines cannot deliver reasonable performance beyond $\alpha > 0.5$.
+There are two reasons behind the results. First, \voter has near-zero failure rate and thus avoids unnecessary upsizing and downsizing operations. Second, \voter employs the resizing strategy (proposed in Section~\ref{sec:dyn}) by only relocating the entries in one subtable efficiently. 
 Compared with time taken by \formal{insert}, \formal{delete} and \formal{find}, the cost of \formal{resize} for \voter is almost negligible as shown by the results. 
 
-
-\begin{figure*}[h]
+\begin{figure*}[t]
 	\begin{minipage}{0.19\linewidth}\centering
 		\includegraphics[width=\linewidth]{pic/dynamic/twitter/diff_lower.eps}
 		\centerline{\dstwitter}
@@ -276,28 +208,87 @@ Compared with time taken by \formal{insert}, \formal{delete} and \formal{find}, 
 	\label{fig:vary-alpha-time}
 \end{figure*}
 
-\begin{figure*}[h]
-	\begin{minipage}{0.18\linewidth}\centering
+\begin{table*}{t}\centering
+	\begin{minipage}{0.45\linewidth}\centering
+		\caption{The failure of TW (Percentages).}
+		\begin{tabular}{|c|c|c|c|c|c|}
+			\hline
+			& 0.75 & 0.8 & 0.85 & 0.9 & 0.95\\ \hline
+			Linear &0.0 & 0.0 &4.6e-5  & 1.1e-3 & 3.9e-1 \\ \hline
+			CUDPP & 0.0 & 0.0 &0.0  & 0.0 & 0.0 \\ \hline
+			MegaKV & 3.4e-1 & 5.6e-1 &8.9e-1 & 1.4 & 2.0 \\ \hline
+			DyHash &0.0 & 0.0 &0.0  & 0.0 & 0.0 \\ \hline
+		\end{tabular}
+		\label{tab:fail:tw}
+	\end{minipage}
+	\begin{minipage}{0.45\linewidth}\centering
+		\caption{The failure of RE (Percentages).}
+		\begin{tabular}{|c|c|c|c|c|c|}
+			\hline
+			& 0.75 & 0.8 & 0.85 & 0.9 & 0.95\\ \hline
+			Linear &5.6e-3 & 1.5e-2 &1.8e-2  & 2.0e-2 & 2.0 \\ \hline
+			CUDPP & 0.0 & 0.0 &0.0  & 0.0 & 0.0 \\ \hline
+			MegaKV &5.1e-1 & 8.8e-1 &1.5  & 2.3 & 3.5 \\ \hline
+			DyHash &0.0 & 0.0 &0.0  & 1.0e-6 & 1.0e-6 \\ \hline
+		\end{tabular}
+		\label{tab:fail:re}
+	\end{minipage}
+	\begin{minipage}{0.45\linewidth}\centering
+		\caption{The failure of LINE (Percentages).}
+		\begin{tabular}{|c|c|c|c|c|c|}
+			\hline
+			& 0.75 & 0.8 & 0.85 & 0.9 & 0.95\\ \hline
+			Linear &0.0 & 0.0 &1.1e-4  & 1.8e-3 & 3.9e-1 \\ \hline
+			CUDPP & 0.0 & 0.0 &0.0  & 0.0 & 0.0 \\ \hline
+			MegaKV &4.6e-1 & 8.4e-1 &1.5  & 2.5 & 3.9 \\ \hline
+			DyHash &0.0 & 0.0 &0.0  & 2.0e-6 & 4.0e-6 \\ \hline
+		\end{tabular}
+		\label{tab:fail:line}
+	\end{minipage}
+	\begin{minipage}{0.45\linewidth}\centering
+		\caption{The failure of RAND (Percentages).}
+		\begin{tabular}{|c|c|c|c|c|c|}
+			\hline
+			& 0.75 & 0.8 & 0.85 & 0.9 & 0.95\\ \hline
+			Linear &8.4e-5 & 4.1e-4 &5.7e-4  & 8.7e-4 & 2.0 \\ \hline
+			CUDPP & 0.0 & 0.0 &0.0  & 0.0 & 0.0 \\ \hline
+			MegaKV &4.2e-1 & 7.9e-1 &1.4  & 2.4 & 3.9 \\ \hline
+			DyHash &0.0 & 0.0 &0.0  & 0.0 & 0.0 \\ \hline
+		\end{tabular}
+		\label{tab:fail:rand}
+	\end{minipage}
+	\begin{minipage}{0.45\linewidth}\centering
+		\caption{The failure of COM (Percentages).}
+		\begin{tabular}{|c|c|c|c|c|c|}
+			\hline
+			& 0.75 & 0.8 & 0.85 & 0.9 & 0.95\\ \hline
+			Linear &0.0 & 0.0 &2.0e-5  & 6.5e-4 & 2.5e-2 \\ \hline
+			CUDPP & 0.0 & 0.0 &0.0  & 0.0 & 0.0 \\ \hline
+			MegaKV &6.1e-2 & 8.0e-1 &1.0  & 1.3 & 1.5 \\ \hline
+			DyHash &0.0 & 0.0 &0.0  & 0.0 & 7.1e-4 \\ \hline
+		\end{tabular}
+		\label{tab:fail:com}
+	\end{minipage}
+\end{table*}
+
+\begin{figure*}[t]
+	\begin{minipage}{0.19\linewidth}\centering
 		\includegraphics[width=\linewidth]{pic/dynamic/twitter/diff_upper.eps}
 		\centerline{\dstwitter}
 	\end{minipage}
-	\hfill
-	\begin{minipage}{0.18\linewidth}\centering
+	\begin{minipage}{0.19\linewidth}\centering
 		\includegraphics[width=\linewidth]{pic/dynamic/reddit/diff_upper.eps}
 		\centerline{\dsreddit}
 	\end{minipage}
-	\hfill
-	\begin{minipage}{0.18\linewidth}\centering
+	\begin{minipage}{0.19\linewidth}\centering
 		\includegraphics[width=\linewidth]{pic/dynamic/tpch/diff_upper.eps}
 		\centerline{\dstpch}
 	\end{minipage}
-	\hfill
-	\begin{minipage}{0.18\linewidth}\centering
+	\begin{minipage}{0.19\linewidth}\centering
 		\includegraphics[width=\linewidth]{pic/dynamic/ali/diff_upper.eps}
 		\centerline{\dsali}
 	\end{minipage}
-	\hfill
-	\begin{minipage}{0.18\linewidth}\centering
+	\begin{minipage}{0.19\linewidth}\centering
 		\includegraphics[width=\linewidth]{pic/dynamic/random/diff_upper.eps}
 		\centerline{\dsrandom}
 	\end{minipage}
@@ -305,65 +296,31 @@ Compared with time taken by \formal{insert}, \formal{delete} and \formal{find}, 
 	\label{fig:vary-alpha-time}
 \end{figure*}
 
-
-\begin{figure*}[h]
-	\begin{minipage}{0.18\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/dynamic-stability/dynamic-sta-twitter.eps}
-		\centerline{\dstwitter}
-	\end{minipage}
-	\hfill
-	\begin{minipage}{0.18\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/dynamic-stability/dynamic-sta-reddit.eps}
-		\centerline{\dsreddit}
-	\end{minipage}
-	\hfill
-	\begin{minipage}{0.18\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/dynamic-stability/dynamic-sta-tpch.eps}
-		\centerline{\dstpch}
-	\end{minipage}
-	\hfill
-	\begin{minipage}{0.18\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/dynamic-stability/dynamic-sta-ali.eps}
-		\centerline{\dsali}
-	\end{minipage}
-	\hfill
-	\begin{minipage}{0.18\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/dynamic-stability/dynamic-sta-random.eps}
-		\centerline{\dsrandom}
-	\end{minipage}
-	\caption{System stability.}
-	\label{fig:vary-alpha-stability}
-\end{figure*}
-
 \vspace{1mm}\noindent\textbf{Varying the filled factor upper bound $\beta$.}
 
 
 \vspace{1mm}\noindent\textbf{Varying insert vs. delete ratio $r$.}
-In Figure~\ref{fig:vary-r-time}, we report the results for varying the ratio $r$. \linear and \megakv remains inefficient as they incur expensive overheads of resizing. An interesting observation for \linear the \megakv there exists a sweet spot where the resizing cost is the minimal.
-It is because the workload composition of insertions and deletions should be just right so that it does not trigger unnecessary upsizing or downsizing. However, in reality, the workloads could vary significantly and existing methods cannot be easily adapted while maintaining guaranteed filled factor. This has again validated the effectiveness of \voter.  
+In Figure~\ref{fig:vary-r-time}, we report the results for varying the ratio $r$. \linear and \megakv remains inefficient as they incur expensive overheads of resizing. An interesting observation for \linear and \megakv is that there exists a sweet spot where the resizing cost is the minimal.
+It is because the workload composition of insertions and deletions should be just right so that it does not trigger unnecessary upsizing or downsizing. However, in reality, the workloads could vary significantly and existing methods cannot be easily adapted while maintaining guaranteed filled factor. This has again validated the effectiveness of \voter against dynamic workloads.
 
-\begin{figure*}[h]
-	\begin{minipage}{0.18\linewidth}\centering
+\begin{figure*}[t]
+	\begin{minipage}{0.19\linewidth}\centering
 		\includegraphics[width=\linewidth]{pic/dynamic/twitter/diff_r.eps}
 		\centerline{\dstwitter}
 	\end{minipage}
-	\hfill
-	\begin{minipage}{0.18\linewidth}\centering
+	\begin{minipage}{0.19\linewidth}\centering
 		\includegraphics[width=\linewidth]{pic/dynamic/reddit/diff_r.eps}
 		\centerline{\dsreddit}
 	\end{minipage}
-	\hfill
-	\begin{minipage}{0.18\linewidth}\centering
+	\begin{minipage}{0.19\linewidth}\centering
 		\includegraphics[width=\linewidth]{pic/dynamic/tpch/diff_r.eps}
 		\centerline{\dstpch}
 	\end{minipage}
-	\hfill
-	\begin{minipage}{0.18\linewidth}\centering
+	\begin{minipage}{0.19\linewidth}\centering
 		\includegraphics[width=\linewidth]{pic/dynamic/ali/diff_r.eps}
 		\centerline{\dsali}
 	\end{minipage}
-	\hfill
-	\begin{minipage}{0.18\linewidth}\centering
+	\begin{minipage}{0.19\linewidth}\centering
 		\includegraphics[width=\linewidth]{pic/dynamic/random/diff_r.eps}
 		\centerline{\dsrandom}
 	\end{minipage}
@@ -372,30 +329,26 @@ It is because the workload composition of insertions and deletions should be jus
 \end{figure*}
 
 \vspace{1mm}\noindent\textbf{Varying the batch size.}
-We have also varied the size of each processing batch. The results are reported in Figure~\ref{fig:vary-batch-size}. \voter remains the most efficient method over \linear and \megakv. It is not surprised to find that the performance of \linear and \megakv is the worst for the smallest batch size, since a smaller batch triggers more resizing for \linear and \megakv. 
+We have also varied the size of each processing batch. The results are reported in Figure~\ref{fig:vary-batch-size}. \voter remains the most efficient method over \linear and \megakv. It is not surprised to find that the performance of \linear and \megakv is the worst for the smallest batch size, since a fine grained processing batch triggers additional resizing for \linear and \megakv. 
 
-\begin{figure*}[h]
-	\begin{minipage}{0.18\linewidth}\centering
+\begin{figure*}[t]
+	\begin{minipage}{0.19\linewidth}\centering
 		\includegraphics[width=\linewidth]{pic/dynamic/twitter/diff_batch_size.eps}
 		\centerline{\dstwitter}
 	\end{minipage}
-	\hfill
-	\begin{minipage}{0.18\linewidth}\centering
+	\begin{minipage}{0.19\linewidth}\centering
 		\includegraphics[width=\linewidth]{pic/dynamic/reddit/diff_batch_size.eps}
 		\centerline{\dsreddit}
 	\end{minipage}
-	\hfill
-	\begin{minipage}{0.18\linewidth}\centering
+	\begin{minipage}{0.19\linewidth}\centering
 		\includegraphics[width=\linewidth]{pic/dynamic/tpch/diff_batch_size.eps}
 		\centerline{\dstpch}
 	\end{minipage}
-	\hfill
-	\begin{minipage}{0.18\linewidth}\centering
+	\begin{minipage}{0.19\linewidth}\centering
 		\includegraphics[width=\linewidth]{pic/dynamic/ali/diff_batch_size.eps}
 		\centerline{\dsali}
 	\end{minipage}
-	\hfill
-	\begin{minipage}{0.18\linewidth}\centering
+	\begin{minipage}{0.19\linewidth}\centering
 		\includegraphics[width=\linewidth]{pic/dynamic/random/diff_batch_size.eps}
 		\centerline{\dsrandom}
 	\end{minipage}
@@ -405,3 +358,27 @@ We have also varied the size of each processing batch. The results are reported 
 
 \vspace{1mm}\noindent\textbf{System stability.}
 
+\begin{figure*}[t]
+	\begin{minipage}{0.19\linewidth}\centering
+		\includegraphics[width=\linewidth]{pic/dynamic-stability/dynamic-sta-twitter.eps}
+		\centerline{\dstwitter}
+	\end{minipage}
+	\begin{minipage}{0.19\linewidth}\centering
+		\includegraphics[width=\linewidth]{pic/dynamic-stability/dynamic-sta-reddit.eps}
+		\centerline{\dsreddit}
+	\end{minipage}
+	\begin{minipage}{0.19\linewidth}\centering
+		\includegraphics[width=\linewidth]{pic/dynamic-stability/dynamic-sta-tpch.eps}
+		\centerline{\dstpch}
+	\end{minipage}
+	\begin{minipage}{0.19\linewidth}\centering
+		\includegraphics[width=\linewidth]{pic/dynamic-stability/dynamic-sta-ali.eps}
+		\centerline{\dsali}
+	\end{minipage}
+	\begin{minipage}{0.19\linewidth}\centering
+		\includegraphics[width=\linewidth]{pic/dynamic-stability/dynamic-sta-random.eps}
+		\centerline{\dsrandom}
+	\end{minipage}
+	\caption{System stability.}
+	\label{fig:vary-alpha-stability}
+\end{figure*}
