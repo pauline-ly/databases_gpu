@@ -172,7 +172,7 @@ The throughput of \formal{insert} increases with more hash tables, since there a
 	\caption{Run time for varying $\alpha$.}
 	\label{fig:vary-alpha-time}
 \end{figure*}
-\begin{table*}{ht}\centering
+\begin{table*}[ht]\centering
 	\begin{minipage}{0.45\linewidth}\centering
 		\caption{The failure of TW (Percentages).}
 		\begin{tabular}{|c|c|c|c|c|c|}
@@ -394,7 +394,7 @@ The increase is mostly attributed to the additional processing workload of the i
 
 
 \vspace{1mm}\noindent\textbf{Varying insert vs. delete ratio $r$.}
-In Figure~\ref{fig:vary-r-time}, we report the results for varying the ratio $r$. \linear and \megakv remains inefficient as they incur expensive overheads of resizing. An interesting observation for \linear and \megakv is that there exists a sweet spot where the resizing cost is the minimal.
+In Figure~\ref{fig:vary-r-time}, we report the results for varying the ratio $r$. \linear and \megakv remains inefficient as they incur expensive overheads of resizing. An interesting observation for \linear and \megakv is that there exists some sweet spots where the resizing cost is the minimal.
 It is because the workload composition of insertions and deletions should be just right so that it does not trigger unnecessary upsizing or downsizing. However, in reality, the workloads could vary significantly and existing methods cannot be easily adapted while maintaining guaranteed filled factor. This has again validated the effectiveness of \voter against dynamic workloads.
 
 
