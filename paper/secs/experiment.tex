@@ -6,7 +6,7 @@ We will introduce the experimental setup and the discuss the results.
 
 \vspace{1mm}\noindent\textbf{Baselines.} We compare the proposed approach in this paper with several state-of-the-art hash table implementations on GPUs and CPUs. 
 \begin{itemize}
-	\item \cudpp is a popular CUDA primitive library\footnote{https://github.com/cudpp/cudpp} which contains the cuckoo hash table implementation published in~\cite{alcantara2009real}. 
+	\item \cudpp is a popular CUDA primitive library which contains the cuckoo hash table implementation published in~\cite{alcantara2009real}. 
 	\cudpp employs four hashing function and each hash value stores only one KV pair with 64 bits size (32 bits for key and 32 bits for value). 
 	\cudpp only supports \formal{insert} and \formal{find} operations. 
 	\item \megakv is a state-of-the-art approach for GPU-based key value store published in~\cite{zhang2015mega}. It employs a cuckoo hash with two hash functions.
@@ -15,12 +15,12 @@ We will introduce the experimental setup and the discuss the results.
 	\item \google is an efficient CPU-based hash table implementation\footnote{https://github.com/sparsehash/sparsehash-c11/}. We choose the \emph{dense\_hash\_map} implementation since it provides the best efficiency.
 	\item \voter is the approach proposed in this paper.
 \end{itemize}
-We adopt the original implementations of \cudpp and from their corresponding inventors. 
+We adopt the original implementations of \cudpp and \google from their corresponding inventors. 
 For \megakv, we note that its intra-block synchronization could lead to inconsistency issue as well as a large number of insertion failures, especially when the filled factor is high.  
 Thus, we revise its code by replacing the intra-block synchronization with atomicExch to resolve the race condition. The adoption of atomicExch preserves the design principle of \megakv for \emph{not} locking the entire bucket for updates. Moreover, it leads to less insertion failures and similar performance against its original implementation. 
 For \linear, we implement the CUDA version of the algorithm proposed in \cite{hong2010mapcg}.
 
-Note that we do not compare with the dynamic GPU hash approach proposed in \cite{ashkiani2018dynamic} for two major reasons. First, we cannot obtain the original implementation from its authors. Second, the approach devises a dedicated memory allocator other than cudaMalloc. A dedicated allocator will improve the performance but add complexity to the system. Additionally, it needs to occupy a large memory in advance and is not transparent to other GPU applications.
+Note that we do not compare with the dynamic GPU hash approach proposed in \cite{ashkiani2018dynamic} for two major reasons. First, we cannot obtain the original implementation from its authors. Second, the approach devises a dedicated memory allocator other than cudaMalloc. A dedicated allocator will improve the performance but add complexity the system. Additionally, it needs to occupy a large memory in advance and is not transparent to other GPU applications.
 In contrast, our proposed approach only use native allocator supported. 
 We do not compare with \cite{breslow2016horton} since it only improves \megakv marginally using a more costly insertion process.
 
@@ -70,7 +70,6 @@ Since all GPU approaches (except for \voter) only supports 32 bit key and 32 bit
 \vspace{1mm}\noindent\textbf{Static Hashing Comparison (Section~\ref{sec:exp:static}).}
 Under the static setting, we evaluate \formal{insert} and \formal{find} performance among all compared approaches. 
 In particular, we insert all KV pairs from the datasets followed by issuing 1 million random search queries. 
-The intention for testing the static setting is to see if \voter can produce competitive performance, even though it uses a slightly inefficient atomicCAS (compared with atomicExch used by the GPU baselines) to lock a bucket for supporting KV pairs with larger size.  
 
 \vspace{1mm}\noindent\textbf{Dynamic Hashing Comparison (Section~\ref{sec:exp:dynamic}).}
 Under the dynamic setting, we generate the workloads by batching the hash table operations. 
@@ -172,7 +171,7 @@ The throughput of \formal{insert} increases with more hash tables, since there a
 	\caption{Run time for varying $\alpha$.}
 	\label{fig:vary-alpha-time}
 \end{figure*}
-\begin{table*}[ht]\centering
+\begin{table*}{ht}\centering
 	\begin{minipage}{0.45\linewidth}\centering
 		\caption{The failure of TW (Percentages).}
 		\begin{tabular}{|c|c|c|c|c|c|}
@@ -331,7 +330,7 @@ The throughput of \formal{insert} increases with more hash tables, since there a
 		\centerline{\dsrandom}
 	\end{minipage}
 	\caption{System stability.}
-	\label{fig:stability}
+	\label{fig:vary-alpha-stability}
 \end{figure*}
 
 
@@ -376,7 +375,7 @@ The performance is measured by the total running time for processing all batches
 \megakv has a higher insertion failure rate than that of \linear (see Table~\ref{tab:fail:tw}-\ref{tab:fail:com}). Thus \megakv triggers more upsizing operations leading to a lower filled ratio when resized. As each processing batch contains deletions, \megakv is prone to downsizing when the filled factor falls below $\alpha$ after deletions materialize.
 The overhead of repeated upsizing and downsizing severely degrades the performance of \megakv, for the major reason of maintaining the filled factor above $\alpha$. 
 The only exception is where $\alpha$ is very small (i.e., $\alpha=0.25$) and \megakv does not need to perform downsize regularly. However, small $\alpha$ means the hash table is mostly empty and thus wastes GPU memory resources.
-In contrast, \voter achieves significant speedups over \linear and \megakv (up to \xxx and \xxx faster respectively under the default setting). 
+In contrast, \voter achieves significant speedups over \linear and \megakv (up to 4.92 and 2.83 faster respectively under the default setting). 
 \voter can support even larger $\alpha$ (i.e., $\beta\cdot\frac{d}{d+1}$) but we omit the results since the baselines cannot deliver reasonable performance beyond $\alpha > 0.5$.
 There are two reasons behind the results. First, \voter has near-zero failure rate and thus avoids unnecessary upsizing and downsizing operations. Second, \voter employs the resizing strategy (proposed in Section~\ref{sec:dyn}) by only relocating the entries in one subtable efficiently. 
 Compared with time taken by \formal{insert}, \formal{delete} and \formal{find}, the cost of \formal{resize} for \voter is almost negligible as shown by the results. 
@@ -394,7 +393,7 @@ The increase is mostly attributed to the additional processing workload of the i
 
 
 \vspace{1mm}\noindent\textbf{Varying insert vs. delete ratio $r$.}
-In Figure~\ref{fig:vary-r-time}, we report the results for varying the ratio $r$. \linear and \megakv remains inefficient as they incur expensive overheads of resizing. An interesting observation for \linear and \megakv is that there exists some sweet spots where the resizing cost is the minimal.
+In Figure~\ref{fig:vary-r-time}, we report the results for varying the ratio $r$. \linear and \megakv remains inefficient as they incur expensive overheads of resizing. An interesting observation for \linear and \megakv is that there exists a sweet spot where the resizing cost is the minimal.
 It is because the workload composition of insertions and deletions should be just right so that it does not trigger unnecessary upsizing or downsizing. However, in reality, the workloads could vary significantly and existing methods cannot be easily adapted while maintaining guaranteed filled factor. This has again validated the effectiveness of \voter against dynamic workloads.
 
 
@@ -405,6 +404,5 @@ We have also varied the size of each processing batch. The results are reported 
 
 
 \vspace{1mm}\noindent\textbf{System stability.}
-To test the system stability, we track the elapsed time for processing the first 100 batches and report the results in Figure~\ref{fig:stability}. The trend shows that \linear and \megakv incur performance bumps for a number of locations. This is mainly triggered by the resizing operations to handle failed insertions, which also explains the effect is more evident on \megakv than that on \linear. For \voter, the elapsed time shows a smooth trend which indicate the resizing operation does not have visible impact on the performance. 
 
 
