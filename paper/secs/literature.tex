@@ -10,8 +10,8 @@ Subsequently, Horton table \cite{breslow2016horton} improves the efficiency of \
 Meanwhile, in the database domain, several SIMD hash table implementations have been proposed to facilitate relation join and graph processing, including cuckoo hash \cite{ross2007efficient} and linear probing \cite{zhong2014medusa}. 
 
 It is noted that the aforementioned works focus on the static case: the size of data that needs to be hashed is known in advance. Thus, the static designs would prepare a sufficiently large memory to store the hash table. In this way, the hash table operations are fast since the collision rarely happens. However, the static approach wastes memory resources and, to some extent, it prohibits data from other applications to coexist on the device memory. 
-Moreover, existing GPU hash table design rely on atomicExch
-operation to transact a KV pair, which only supports up to 64 bits for key and value altogether.
+Moreover, existing designs rely on atomicExch
+operation to avoid conflicts when transacting a KV pair on GPUs, which only supports up to 64 bits for KV altogether. This design, albeit being efficient, has severe limitation as the value component exceeds 64 bits in many real-world scenarios.  
 This motivates us to develop a general dynamic hash table on GPUs that not only support larger key-value pairs but also actively makes adjustments according to the data size to preserve space efficiency. 
 In this paper, we propose a dynamic cuckoo hash table on GPUs, which maintains high filled factor to minimize memory footprint. In order to support efficient concurrent hash updates, we introduce a novel voter-based coordination scheme which reduces thread conflicts. 
 %Experimental results have revealed that the proposed solution could achieve competitive or even better performance than the state-of-the-art static hash tables on GPUs, while utilizing significantly less device memory. 

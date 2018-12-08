@@ -43,18 +43,18 @@ A CUDA core executes the same instruction of a warp in a lockstep\footnote{Altho
 	it is still more efficient to run with the lockstep execution model.}.
 Each warp runs independently but can collaborate through different memory types discussed as the following.  
 
-\vspace{1mm}\noindent\textbf{Memory Hierarchy.} Compared CPUs, GPUs are built with large register files to enable massive parallelism. 
-For example, NVIDIA GTX 1080 GPUs feature 256KB of register files for each SM. Furthermore, the shared memory, which has similar performance with the L1 cache, can be programmed within a block to facilitate efficient local memory access inside a SM.
-The L2 cache is shared among all SMs to speedup memory access to the device memory. The device memory has the largest capacity and the lowest bandwidth in the GPU memory hierarchy.
+%\vspace{1mm}\noindent\textbf{Memory Hierarchy.} Compared CPUs, GPUs are built with large register files to enable massive parallelism. 
+%For example, NVIDIA GTX 1080 GPUs feature 256KB of register files for each SM. Furthermore, the shared memory, which has similar performance with the L1 cache, can be programmed within a block to facilitate efficient local memory access inside a SM.
+%The L2 cache is shared among all SMs to speedup memory access to the device memory. The device memory has the largest capacity and the lowest bandwidth in the GPU memory hierarchy.
 
-GPUs offer an significant better data accessing throughputs than CPUs for two major reasons. 
-First,the device memory has high memory bandwidth, often an order of magnitude faster than RAM.
-Second, GPUs effectively hide memory access latency by warp switching. When a warp is blocked by memory accesses, other warps whose next instruction has its operands ready are eligible to be scheduled for execution. With sufficient threads launched, memory stalls can be minimized or even eliminated \cite{zhang2015mega}.
-Thus, the fast data accessing performance makes GPUs an ideal accelerator for data intensive applications such as hash tables. 
+%GPUs offer an significant better data accessing throughputs than CPUs for two major reasons. 
+%First,the device memory has high memory bandwidth, often an order of magnitude faster than RAM.
+%Second, GPUs effectively hide memory access latency by warp switching. When a warp is blocked by memory accesses, other warps whose next instruction has its operands ready are eligible to be scheduled for execution. With sufficient threads launched, memory stalls can be minimized or even eliminated \cite{zhang2015mega}.
+%Thus, the fast data accessing performance makes GPUs an ideal accelerator for data intensive applications such as hash tables. 
 
-Data is transferred between CPUs and GPUs (or between two GPU devices) via the PCIe link (Gen 3), which has been the bottleneck of many data-intensive applications \cite{zhang2015mega,kaldewey2012gpu,zhang2013omnidb}. In recent years, there have been many innovations proposed to reduce the overhead of the data transfer, from overlapping PCIe transfer with kernel execution to using hardware acceleration such as PCIe Gen 4 and NVlink \cite{thompto2016power9}. Nonetheless, we omit the discussion on how to minimize this data transfer cost since it is orthogonal to designing an efficient hash table on \emph{one} GPU device.
+%Data is transferred between CPUs and GPUs (or between two GPU devices) via the PCIe link (Gen 3), which has been the bottleneck of many data-intensive applications \cite{zhang2015mega,kaldewey2012gpu,zhang2013omnidb}. In recent years, there have been many innovations proposed to reduce the overhead of the data transfer, from overlapping PCIe transfer with kernel execution to using hardware acceleration such as PCIe Gen 4 and NVlink \cite{thompto2016power9}. Nonetheless, we omit the discussion on how to minimize this data transfer cost since it is orthogonal to designing an efficient hash table on \emph{one} GPU device.
 
-\vspace{1mm}\noindent\textbf{Guidelines on GPU programming.}
+\vspace{1mm}\noindent\textbf{Optimizing GPU Programs.}
 When programming a GPU device, there are several important guidelines to harness GPUs' massive parallelism.
 \begin{itemize}
 	\item \emph{Minimize Warp Divergence.} Threads in a warp will be serialized if they execute different instructions. To enable maximum parallelism, one needs to minimize branching statements executed within a warp.  
