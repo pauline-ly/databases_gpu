@@ -375,7 +375,7 @@ The performance is measured by the total running time for processing all batches
 \megakv has a higher insertion failure rate than that of \linear (see Table~\ref{tab:fail:tw}-\ref{tab:fail:com}). Thus \megakv triggers more upsizing operations leading to a lower filled ratio when resized. As each processing batch contains deletions, \megakv is prone to downsizing when the filled factor falls below $\alpha$ after deletions materialize.
 The overhead of repeated upsizing and downsizing severely degrades the performance of \megakv, for the major reason of maintaining the filled factor above $\alpha$. 
 The only exception is where $\alpha$ is very small (i.e., $\alpha=0.25$) and \megakv does not need to perform downsize regularly. However, small $\alpha$ means the hash table is mostly empty and thus wastes GPU memory resources.
-In contrast, \voter achieves significant speedups over \linear and \megakv (up to 4.92 and 4.69 faster respectively under the default setting). 
+In contrast, \voter achieves significant speedups over \linear and \megakv (up to 6.62 and 5.05 faster respectively under the default setting). 
 \voter can support even larger $\alpha$ (i.e., $\beta\cdot\frac{d}{d+1}$) but we omit the results since the baselines cannot deliver reasonable performance beyond $\alpha > 0.5$.
 There are two reasons behind the results. First, \voter has near-zero failure rate and thus avoids unnecessary upsizing and downsizing operations. Second, \voter employs the resizing strategy (proposed in Section~\ref{sec:dyn}) by only relocating the entries in one subtable efficiently. 
 Compared with time taken by \formal{insert}, \formal{delete} and \formal{find}, the cost of \formal{resize} for \voter is almost negligible as shown by the results. 
