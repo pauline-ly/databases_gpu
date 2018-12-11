@@ -66,20 +66,6 @@ Algorithm~\ref{algo:find} presents the pseudo code for a KV lookup by a warp.
 First, the bucket of the $i$th hash table is located, i.e., $loc_i$.
 Then, each thread in the warp (a thread lane $l$) simultaneously searches the key and the ballot function return the lane for which the key is found.
 
-\begin{figure}[t]
-	\hspace{-3em}
-	\begin{minipage}{0.5\linewidth}
-		\label{fig:atomicCAS}
-		\includegraphics[width=5.3cm]{exp/atomic/atomicCAS.eps}
-	\end{minipage}
-	\hspace{-1em}
-	\begin{minipage}{0.5\linewidth}
-		\label{fig:atomicExch}
-		\includegraphics[width=5.3cm]{exp/atomic/atomicExch.eps}
-	\end{minipage}
-	\caption{The performance of atomic operations for varying number of conflicts}
-	\label{fig:atomic}
-\end{figure}
 
 
 
@@ -99,11 +85,44 @@ Thus, it will be expensive for the direct warp-centric approach in the contentio
 Imaging one wants to track the number of retweets posted to active twitter accounts in the current month, via storing the twitter ID and the obtained retweet counts as KV pairs. In this particular scenario, certain twitter celerities could receive thousands of retweets in a very short period. 
 This triggers the same twitter ID gets updated frequently and a serious number of conflicts would happen. 
 
+
+\begin{figure}[t]
+	\hspace{-3em}
+	\begin{minipage}{0.5\linewidth}
+		\label{fig:atomicCAS}
+		\includegraphics[width=5.3cm]{exp/atomic/atomicCAS.eps}
+	\end{minipage}
+	\hspace{-1em}
+	\begin{minipage}{0.5\linewidth}
+		\label{fig:atomicExch}
+		\includegraphics[width=5.3cm]{exp/atomic/atomicExch.eps}
+	\end{minipage}
+	\caption{The performance of atomic operations for varying number of conflicts}
+	\label{fig:atomic}
+\end{figure}
+
 To alleviate the cost of spinning, we propose the voter-coordination scheme. 
 We assign an \formal{insert} to a thread rather than using a warp to handle the operation. Before submitting a locking request and updating the corresponding bucket, the thread will participate in a vote among the threads in the same warp. 
 The winner thread $l$ becomes the leader of the warp and takes control. Subsequent, the warp inspects the bucket and insert the KV for $l$ if there are spaces left, upon $l$ successfully obtaining the lock.
 If $l$ fails to get the lock, the warp revotes another leader to avoid locking on the same bucket.
 Compared with locking on atomic operations, the cost of warp voting is almost negligible since it is heavily optimized in the GPU architecture.  
+
+
+
+Parallel insertion with the voter coordination scheme is presented in Algorithm~\ref{algo:insert}.
+The pseudo code demonstrates how a thread (with lane $l$) from warp $wid$ inserts a KV $(k,v)$ to the $i$th hash table. 
+The warp will first propose a vote among active threads and the process will terminate if all threads finish their tasks (lines~\ref{algo:insert:active:start}-\ref{algo:insert:active:end}).  
+This achieves better resource utilization since no thread will be idle when one of the threads in the same warp is active.  
+The leader $l'$ then broadcasts its KV pair $(k',v')$ as well as the hash table index $i'$ to the warp and tries to lock the inserting bucket (lines~\ref{algo:insert:lock:start}-\ref{algo:insert:lock:end}). 
+The broadcast function ensures all threads in the warp receive the locking result and the warp revotes if $l'$ fails to obtain the lock.
+Otherwise, the warp follows $l'$ and proceeds to update the bucket for $(k',v')$ with a warp-centric approach similar to \formal{find}.
+Once a thread finds $k'$ or an empty space in the bucket, $l'$ will add or update with $(k',v')$ (lines~\ref{algo:insert:write:start}-\ref{algo:insert:write:end}).
+Otherwise there is no space left, $l'$ swaps $(k',v')$ with a random KV in the bucket and inserts the evicted KV to hash table $i+1$ in the next round. 
+In summary, each iteration of the loop presented in Algorithm~\ref{algo:insert} issues $1$ atomic operation and at most $1$ device memory read/write (lines~\ref{algo:insert:vote:start}-\ref{algo:insert:loop:end}).  
+
+Note that we have yet covered how to choose the hash table index $i$ for each insertion (Algorithm~\ref{algo:insert}). Additional number of conflicts would happen if all threads attempting to insert to the same table. For the flow of presentation, we leave the discussion to Section~\ref{sec:dyn} since choosing the hash table is more coherent to the load balancing problem for resizing hash tables. 
+%Moreover, a careful reader would find that the insertion process could lead to multiple appearances of the same key in different hash tables. To fill this gap, one can attach a timestamp to the insertion batch.
+%Hence, the \formal{find} operation is required to scan all $d$ buckets of the same key and extracts the one with the latest timestamp.
 
 
 \begin{algorithm}[t]
@@ -140,28 +159,6 @@ Compared with locking on atomic operations, the cost of warp voting is almost ne
 	\caption{\textbf{Insert}(lane $l$, warp $wid$, kv $(k,v)$, table $i$)}\label{algo:insert}
 \end{algorithm}
 
-Parallel insertion with the voter coordination scheme is presented in Algorithm~\ref{algo:insert}.
-The pseudo code demonstrates how a thread (with lane $l$) from warp $wid$ inserts a KV $(k,v)$ to the $i$th hash table. 
-The warp will first propose a vote among active threads and the process will terminate if all threads finish their tasks (lines~\ref{algo:insert:active:start}-\ref{algo:insert:active:end}).  
-This achieves better resource utilization since no thread will be idle when one of the threads in the same warp is active.  
-The leader $l'$ then broadcasts its KV pair $(k',v')$ as well as the hash table index $i'$ to the warp and tries to lock the inserting bucket (lines~\ref{algo:insert:lock:start}-\ref{algo:insert:lock:end}). 
-The broadcast function ensures all threads in the warp receive the locking result and the warp revotes if $l'$ fails to obtain the lock.
-Otherwise, the warp follows $l'$ and proceeds to update the bucket for $(k',v')$ with a warp-centric approach similar to \formal{find}.
-Once a thread finds $k'$ or an empty space in the bucket, $l'$ will add or update with $(k',v')$ (lines~\ref{algo:insert:write:start}-\ref{algo:insert:write:end}).
-Otherwise there is no space left, $l'$ swaps $(k',v')$ with a random KV in the bucket and inserts the evicted KV to hash table $i+1$ in the next round. 
-In summary, each iteration of the loop presented in Algorithm~\ref{algo:insert} issues $1$ atomic operation and at most $1$ device memory read/write (lines~\ref{algo:insert:vote:start}-\ref{algo:insert:loop:end}).  
-
-Note that we have yet covered how to choose the hash table index $i$ for each insertion (Algorithm~\ref{algo:insert}). Additional number of conflicts would happen if all threads attempting to insert to the same table. For the flow of presentation, we leave the discussion to Section~\ref{sec:dyn} since choosing the hash table is more coherent to the load balancing problem for resizing hash tables. 
-%Moreover, a careful reader would find that the insertion process could lead to multiple appearances of the same key in different hash tables. To fill this gap, one can attach a timestamp to the insertion batch.
-%Hence, the \formal{find} operation is required to scan all $d$ buckets of the same key and extracts the one with the latest timestamp.
-
-\begin{figure}[t]
-	\centering
-	\includegraphics[width=0.48\textwidth]{fig/Voter.pdf}
-	\caption{Example for parallel insertions}
-	\label{fig:voter}
-\end{figure}
-
 We give the following example to demonstrate the parallel insertion process.
 \begin{example}
 	In Figure~\ref{fig:voter}, we visualize the scenario for three threads: $l_x$, $l_y$, $l_z$ from warp $a$ and warp $b$, inserting KV pairs $(k_1,v_1)$,$(k_{33},v_{33})$,$(k_{65},v_{65})$ independently. 
@@ -188,6 +185,12 @@ Similar to \formal{find}, we assign a warp to process a key $k$ on deletion. The
 %\end{algorithm}
 
 
+\begin{figure}[t]
+	\centering
+	\includegraphics[width=0.48\textwidth]{fig/Voter.pdf}
+	\caption{Example for parallel insertions}
+	\label{fig:voter}
+\end{figure}
 \vspace{1mm}\noindent\textbf{Complexity.}
 Since a \formal{find}, \formal{insert} and \formal{delete} operation is independently executed by a thread. 
 The analysis of a single thread complexity is the same as the sequential version of cuckoo hashing \cite{pagh2004cuckoo}: $O(1)$ worst case complexity for \formal{find} and \formal{delete}, $O(1)$ expected time for \formal{insert} for the case of 2 hash tables. 

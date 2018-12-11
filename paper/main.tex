@@ -53,7 +53,7 @@ Hash table, one of the most fundamental data structure,
 have been implemented on Graphics Processing Units (GPUs) to accelerate a wide range of data analytics workloads. Most of the existing works focus on the static scenario and try to occupy as much GPU device memory as possible for maximizing the insertion efficiency. In many cases, the data stored in the hash table gets updated dynamically and existing approaches takes unnecessarily large memory resources, which tend to exclude data from concurrent programs to coexist on the device memory.
 In this paper, we design and implement a dynamic hash table on GPUs with special consideration for space efficiency. To ensure the insertion performance under high filled factor, a novel coordination strategy is proposed for resolving massive thread conflicts. 
 Furthermore,
-We devise an efficient resizing strategy for the dynamic scenario without rehashing the entire table and ensuring a guaranteed filled factor.
+We devise an efficient resizing strategy for the dynamic scenario without rehashing the entire table and the strategy ensures a guaranteed filled factor.
 Extensive experiments have validated the effectiveness of the proposed design over several state-of-the-art hash table implementations on GPUs. For bounded filled factor, our hash table design achieves up to \xxx speedups over the compared approaches against dynamic workloads. 
 \end{abstract}
 
@@ -68,11 +68,11 @@ Extensive experiments have validated the effectiveness of the proposed design ov
 
 
 \input{secs/appendix.tex}
-\balance
+
 
 \pagebreak
-\scriptsize
 \bibliographystyle{abbrv}
 \bibliography{ref}
+\balance
 
 \end{document}

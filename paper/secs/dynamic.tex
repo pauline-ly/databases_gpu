@@ -1,10 +1,5 @@
 \section{Dynamic Hash Table}\label{sec:dyn}
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.45\textwidth]{fig/MultiTable.pdf}
-\caption{Resizing strategy}
-\label{fig:resize}
-\end{figure}
+
 
 In this section, we focus on how to dynamically update the hash tables according to the actual data size. 
 We introduce our strategy how to resize the table in Section~\ref{sec:dyn:resize}.
@@ -26,6 +21,12 @@ Since the filled factor is always lower bounded by $\alpha$, we can deduce that 
 Apparently, a higher lower bound can be achieved by adding more hash tables, while it leads to less efficient \formal{find} and \formal{delete}. 
 We allow the user to configure the number of hash tables to trade off between memory and query processing efficiency. 
 
+\begin{figure}[t]
+	\centering
+	\includegraphics[width=0.45\textwidth]{fig/MultiTable.pdf}
+	\caption{Resizing strategy}
+	\label{fig:resize}
+\end{figure}
 \subsection{KV distribution}\label{sec:dyn:distribute}
 Recall Section~\ref{sec:vot:con} where we discuss how to insert a KV pair attached to a thread, 
 we assign a hash table ID for inserting the KV pair.
