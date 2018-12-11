@@ -9,7 +9,7 @@ We will introduce the experimental setup and the discuss the results.
 	\item \cudpp is a popular CUDA primitive library\footnote{https://github.com/cudpp/cudpp} which contains the cuckoo hash table implementation published in~\cite{alcantara2009real}. 
 	For \cudpp, each hash value stores only one KV pair with 64 bits size (32 bits for key and 32 bits for value). 
 	\cudpp only supports \formal{insert} and \formal{find} operations. 
-	\item \megakv is a state-of-the-art approach for GPU-based key value store published in~\cite{zhang2015mega}. \megakv employs a cuckoo hash as well but
+	\item \megakv is a state-of-the-art approach for GPU-based key value store published in~\cite{zhang2015mega}. \megakv employs a cuckoo hash as well and
 	it allocates a bucket for each hash value. However, it does not lock a bucket when performing update. Instead, it uses intra-block synchronization to resolve race condition. 
 	\item \linear is a GPU-based hash table which uses linear open addressing to resolve conflicts \cite{hong2010mapcg}. 
 	\item \google is an efficient CPU-based hash table implementation\footnote{https://github.com/sparsehash/sparsehash-c11/}. We choose the \emph{dense\_hash\_map} implementation since it provides the best efficiency.
