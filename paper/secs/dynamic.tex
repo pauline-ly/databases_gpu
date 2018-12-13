@@ -19,7 +19,7 @@ Assuming there are $d'$ hash tables with size $2n$, $d-d'$ tables with size $n$ 
 one upsizing process when $\theta > \beta$ lowers the filled factor to $\frac{\theta\cdot(d+d')}{d+d'+1} \geq \frac{\beta \cdot d}{d+1}$.  
 Since the filled factor is always lower bounded by $\alpha$, we can deduce that $\alpha < \frac{d}{d+1}$.
 Apparently, a higher lower bound can be achieved by adding more hash tables, while it leads to less efficient \formal{find} and \formal{delete}. 
-We allow the user to configure the number of hash tables to trade off between memory and query processing efficiency. 
+We allow the user to configure the number of hash tables to trade off memory and query processing efficiency. 
 
 \begin{figure}[t]
 	\centering
@@ -91,7 +91,7 @@ Note that after upsizing hash table $h^i$, its filled factor $\theta_i$ is cut t
 Downsizing the hash table $h^i$ is a reverse process of upsizing $h^i$. There is always room to relocate KV pairs in the same table for upsizing. 
 In contrast, downsizing may rehash some KV pairs to other hash tables, especially when $\theta_i > 50\%$.
 Since the KV pairs located in $loc$ and $loc+|h^i|$ are hashed to $loc$ in the new table, there could be cases the KV pairs exceeds the size of a single bucket. 
-Thus, we first assign a warp to accommodate KV pairs that can fit the size of a single bucket. Similarly as upsizing, it does require locking since there will be no thread conflict on any bucket. 
+Thus, we first assign a warp to accommodate KV pairs that can fit the size of a single bucket. Similar as upsizing, it does require locking since there will be no thread conflict on any bucket. 
 For the remaining KV pairs which cannot fit in the downsized table, called residuals, we insert them into other subtables using Algorithm~\ref{algo:insert}.
 To make sure no conflict occurs between inserting residuals and processing the downsizing subtable, which are both executed in a single kernel, we exclude the downsizing subtable when inserting the residuals. 
 Take an example when we have three subtables and one of them is being downsized. 
