@@ -1,7 +1,0 @@
-\section{conclusion}\label{sec:con}
-In this paper, we contribute a number of novel designs for dynamic hash table on GPUs. 
-First, we equip the bucket-based hash table structure with a voter based coordinate scheme, 
-which not only supports KV pairs with arbitrary size but also reduce the overhead of thread conflicts through the revoting mechanism. 
-Second, we propose a resizing strategy that actively adjusts the table size to save GPU device memory. The resizing strategy only lock one subtable for efficient upsizing or downsizing, which allows concurrent updates to other subtables. Empirically, our proposed design achieves competitive performance against the state-of-the-art static GPU hash tables. Under the dynamic scenario, we gain up to 5x speedups compared with baselines that uses rehashing to adjust their table size. 
-
- 

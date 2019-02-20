@@ -1,0 +1,84 @@
+\documentclass[10pt,journal,compsoc]{IEEEtran}
+
+
+\usepackage{booktabs} % For formal tables
+\usepackage{xspace}
+\usepackage{mathtools}
+\usepackage{amsthm}
+\usepackage{algorithm}
+\usepackage{todonotes}
+\usepackage{color}
+\usepackage{enumitem}
+\usepackage{balance}
+\usepackage{flushend}
+\usepackage[noend]{algpseudocode}
+
+% These commands are optional
+%\acmBooktitle{Transactions of the ACM Woodstock conference}
+%\editor{Jennifer B. Sartor}
+%\editor{Theo D'Hondt}
+%\editor{Wolfgang De Meuter}
+
+\input{secs/notation.tex}
+
+\begin{document}
+\title{Dynamic Hash Tables on GPUs}
+
+
+\author{Yuchen~Li, Jing Zhang, Yue Liu, Zheng Lyu, Zhongdong Huang, Jianling Sun
+	\IEEEcompsocitemizethanks{
+		\IEEEcompsocthanksitem Y. Li is with the School of Information Systems,
+		Singapore Management University.
+		E-mail: yuchenli@smu.edu.sg
+		\IEEEcompsocthanksitem J. Zhang, Y. Liu, Z. Huang and J. Sun are with the College of Computer Science and Technology, Zhejiang University.
+		E-mail: \{zhangjing000, liuyue1013, hzd, sunjl\}@zju.edu.cn
+		\IEEEcompsocthanksitem Z. Lyu is with the Alibaba Group.
+	}%
+}
+
+%\numberofauthors{1}
+%\author{
+%	\alignauthor
+%	Yuchen Li$^\dagger$, Jing Zhang, Yue Liu, Zheng Lyu$^*$, Zhongdong Huang, Jianling Sun\\
+%	\affaddr{$^\dagger$Singapore Management University},
+%	\affaddr{$^*$Alibaba Group},
+%	\affaddr{Zhejiang University}
+%	\email{$^\dagger$yuchenli@smu.edu.sg, $^*$lvzheng.lz@alibaba-inc.com, \\
+%		\{zhangjing000, liuyue1013, hzd, sunjl\}@zju.edu.cn}
+%}
+
+
+\IEEEtitleabstractindextext{%
+\begin{abstract}
+Hash table, one of the most fundamental data structure,
+have been implemented on Graphics Processing Units (GPUs) to accelerate a wide range of data analytics workloads. Most of the existing works focus on the static scenario and try to occupy unnecessarily large GPU device memory for maximizing the insertion efficiency. In many cases, the data stored in the hash table gets updated dynamically and existing approaches takes unnecessarily large memory resources, which tend to exclude data from concurrent programs to coexist on the device memory.
+In this paper, we design and implement a dynamic hash table on GPUs with special consideration for space efficiency. To ensure the insertion performance under high filled factors, a novel coordination strategy is proposed for resolving massive thread conflicts. 
+Furthermore,
+we devise an efficient resizing strategy for the dynamic scenario without rehashing the entire table and the strategy ensures a guaranteed filled factor.
+Extensive experiments have validated the effectiveness of the proposed design over several state-of-the-art hash table implementations on GPUs. For bounded filled factor, our hash table design achieves up to 5x speedups over the compared approaches against dynamic workloads. 
+\end{abstract}
+}
+
+\maketitle
+\IEEEdisplaynontitleabstractindextext
+\IEEEpeerreviewmaketitle
+
+\input{secs/introduction.tex}
+\input{secs/preliminaries.tex}
+\input{secs/literature.tex}
+\input{secs/cuckoo.tex}
+\input{secs/dynamic.tex}
+\input{secs/experiment.tex}
+\input{secs/conclusion.tex}
+
+
+
+\input{secs/appendix.tex}
+
+
+\pagebreak
+\bibliographystyle{abbrv}
+\bibliography{ref}
+\balance
+
+\end{document}
