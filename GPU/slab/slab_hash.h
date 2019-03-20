@@ -7,7 +7,11 @@
 
 
 
-void simple_gpu_test();
+
+
+void simple_gpu_test(char *name=NULL);
+bool  init_kv(unsigned int *key,unsigned int *value,char *filename,int size);
+unsigned int* Read_Data(char* filename);
 
 
 #endif //LINEAR_SLAB_HASH_H

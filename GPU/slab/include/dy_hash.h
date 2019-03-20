@@ -7,15 +7,11 @@
 
 #include <host_defines.h>
 #include <cuda_runtime.h>
-#include "gputimer.h"
-#include "cnmem.h"
+
 //#include "gtest/gtest.h"
 #include <helper_functions.h>
 #include <helper_cuda.h>
-
 #include "cstdio"
-#include "random_numbers.h"
-#include "test_uilt.h"
 #include <vector>
 
 /// type
@@ -55,7 +51,7 @@
 #define cuckoo_cu_speed 1
 #define insert_debug 0
 #define CAS_debug 0
-#define kv_in_Node 0
+#define kv_in_Node 1
 #define show_memory 0
 #define check_memory_alloc 0
 #define api_info 0

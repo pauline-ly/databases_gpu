@@ -1,0 +1,162 @@
+\relax 
+\citation{o2014bitcoin}
+\citation{taylor2013bitcoin}
+\citation{coates2013deep}
+\citation{abadi2016tensorflow}
+\citation{bakkum2010accelerating}
+\citation{kaldewey2012gpu}
+\citation{he2008relational}
+\citation{he2009relational}
+\citation{heimel2013hardware}
+\citation{pan2011fast}
+\citation{zhou2010parallel}
+\citation{zhong2014medusa}
+\citation{zhang2015mega}
+\citation{hetherington2015memcachedgpu}
+\citation{breslow2016horton}
+\citation{bowers2010parallel}
+\citation{pan2010efficient}
+\citation{garcia2011coherent}
+\citation{niessner2013real}
+\citation{wu2015gpu}
+\citation{alcantara2009real}
+\citation{zhang2015mega}
+\citation{hong2010mapcg}
+\citation{hetherington2015memcachedgpu}
+\citation{breslow2016horton}
+\citation{pagh2004cuckoo}
+\citation{alcantara2009real}
+\citation{alcantara2011building}
+\citation{zhang2015mega}
+\citation{breslow2016horton}
+\@writefile{toc}{\contentsline {section}{\numberline {1}introduction}{1}}
+\citation{pagh2004cuckoo}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Frequently Used Notations}}{2}}
+\newlabel{tbl:stat:datasets}{{1}{2}}
+\@writefile{toc}{\contentsline {section}{\numberline {2}preliminaries}{2}}
+\newlabel{sec:pre}{{2}{2}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Hash Table}{2}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}GPU Architecture}{2}}
+\citation{sanders2010cuda}
+\citation{alcantara2009real}
+\citation{wu2015gpu}
+\citation{pan2010efficient}
+\citation{alcantara2009real}
+\citation{alcantara2009real}
+\citation{khorasani2015stadium}
+\citation{zhang2015mega}
+\citation{breslow2016horton}
+\citation{ross2007efficient}
+\citation{zhong2014medusa}
+\citation{ashkiani2018dynamic}
+\citation{ashkiani2018dynamic}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Layout of an NVIDIA GPU architecture}}{3}}
+\newlabel{fig:arch}{{1}{3}}
+\@writefile{toc}{\contentsline {section}{\numberline {3}related works}{3}}
+\newlabel{sec:rel}{{3}{3}}
+\citation{pagh2004cuckoo}
+\citation{fotakis2005space}
+\citation{alcantara2009real}
+\citation{zhang2015mega}
+\citation{breslow2016horton}
+\citation{zhang2015mega}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces The hash table structure}}{4}}
+\newlabel{fig:hashtable}{{2}{4}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}Voter-based GPU Cuckoo Hash}{4}}
+\newlabel{sec:vot}{{4}{4}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Hash Table Structure}{4}}
+\newlabel{sec:vot:has}{{4.1}{4}}
+\@writefile{loa}{\contentsline {algorithm}{\numberline {1}{\ignorespaces \textbf  {Find}(lane $l$, warp $wid$, key $k$)}}{4}}
+\newlabel{algo:find}{{1}{4}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Parallel Hash Table Operations}{4}}
+\newlabel{sec:vot:con}{{4.2}{4}}
+\citation{pagh2004cuckoo}
+\citation{alcantara2009real}
+\newlabel{fig:atomicCAS}{{4.2}{5}}
+\newlabel{fig:atomicExch}{{4.2}{5}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces The performance of atomic operations for varying number of conflicts}}{5}}
+\newlabel{fig:atomic}{{3}{5}}
+\newlabel{algo:insert:active:start}{{1}{5}}
+\newlabel{algo:insert:vote:start}{{3}{5}}
+\newlabel{algo:insert:active:end}{{5}{5}}
+\newlabel{algo:insert:lock:start}{{6}{5}}
+\newlabel{algo:insert:lock:end}{{9}{5}}
+\newlabel{algo:insert:vote:end}{{11}{5}}
+\newlabel{algo:insert:write:start}{{12}{5}}
+\newlabel{algo:insert:write:end}{{17}{5}}
+\newlabel{algo:insert:loop:end}{{22}{5}}
+\@writefile{loa}{\contentsline {algorithm}{\numberline {2}{\ignorespaces \textbf  {Insert}(lane $l$, warp $wid$, kv $(k,v)$, table $i$)}}{5}}
+\newlabel{algo:insert}{{2}{5}}
+\citation{raab1998balls}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Example for parallel insertions}}{6}}
+\newlabel{fig:voter}{{4}{6}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Dynamic Hash Table}{6}}
+\newlabel{sec:dyn}{{5}{6}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Structure Resizing}{6}}
+\newlabel{sec:dyn:resize}{{5.1}{6}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Resizing strategy}}{6}}
+\newlabel{fig:resize}{{5}{6}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}KV distribution}{6}}
+\newlabel{sec:dyn:distribute}{{5.2}{6}}
+\newlabel{them:balance}{{1}{6}}
+\newlabel{eq:conflict-min}{{1}{6}}
+\citation{alcantara2009real}
+\citation{zhang2015mega}
+\citation{hong2010mapcg}
+\citation{hong2010mapcg}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Illustration for upsizing and downsizing.}}{7}}
+\newlabel{fig:upsize}{{6}{7}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Rehashing}{7}}
+\newlabel{sec:dyn:rehash}{{5.3}{7}}
+\@writefile{toc}{\contentsline {section}{\numberline {6}experimental evaluation}{7}}
+\newlabel{sec:exp}{{6}{7}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Experiment Setup}{7}}
+\newlabel{sec:exp:setup}{{6.1}{7}}
+\citation{ashkiani2018dynamic}
+\citation{breslow2016horton}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces The datasets used in the experiments.}}{8}}
+\newlabel{table:exp_data_sets}{{2}{8}}
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Parameters in the experiments}}{8}}
+\newlabel{tbl:parameters}{{3}{8}}
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Throughput of {\tt  DyHash}\xspace  when varying the number of hash tables.}}{8}}
+\newlabel{fig:vary-table}{{7}{8}}
+\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces Throughput of subtable resize.}}{8}}
+\newlabel{fig:resize}{{8}{8}}
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces The failure of TW (Percentages).}}{9}}
+\newlabel{tab:fail:tw}{{4}{9}}
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces The failure of RE (Percentages).}}{9}}
+\newlabel{tab:fail:re}{{5}{9}}
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces The failure of LINE (Percentages).}}{9}}
+\newlabel{tab:fail:line}{{6}{9}}
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces The failure of RAND (Percentages).}}{9}}
+\newlabel{tab:fail:rand}{{7}{9}}
+\@writefile{lot}{\contentsline {table}{\numberline {8}{\ignorespaces The failure of COM (Percentages).}}{9}}
+\newlabel{tab:fail:com}{{8}{9}}
+\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces Throughput of all compared approaches under the static setting.}}{9}}
+\newlabel{fig:static}{{9}{9}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Tunning Parameters}{9}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}Dynamic Resizing}{9}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.4}Static Hashing Comparison}{9}}
+\newlabel{sec:exp:static}{{6.4}{9}}
+\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces GPU profiling results for static hashing comparison.}}{10}}
+\newlabel{fig:static:profile}{{10}{10}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.5}Dynamic Hashing Comparison}{10}}
+\newlabel{sec:exp:dynamic}{{6.5}{10}}
+\@writefile{lof}{\contentsline {figure}{\numberline {11}{\ignorespaces Run time for varying $\alpha $.}}{11}}
+\newlabel{fig:vary-alpha-time}{{11}{11}}
+\@writefile{lof}{\contentsline {figure}{\numberline {12}{\ignorespaces Run time for varying $\beta $.}}{11}}
+\newlabel{fig:vary-beta}{{12}{11}}
+\@writefile{lof}{\contentsline {figure}{\numberline {13}{\ignorespaces Run time for varying $r$.}}{11}}
+\newlabel{fig:vary-r-time}{{13}{11}}
+\@writefile{lof}{\contentsline {figure}{\numberline {14}{\ignorespaces Run time for varying the batch size.}}{11}}
+\newlabel{fig:vary-batch-size}{{14}{11}}
+\@writefile{lof}{\contentsline {figure}{\numberline {15}{\ignorespaces System stability.}}{11}}
+\newlabel{fig:vary-alpha-stability}{{15}{11}}
+\@writefile{lof}{\contentsline {figure}{\numberline {16}{\ignorespaces Throughputs of insert for varying $\beta $.}}{12}}
+\newlabel{fig:static:all:insert}{{16}{12}}
+\@writefile{lof}{\contentsline {figure}{\numberline {17}{\ignorespaces Throughputs of search for varying $\beta $.}}{12}}
+\newlabel{fig:static:all:search}{{17}{12}}
+\@writefile{toc}{\contentsline {section}{\numberline {7}conclusion}{12}}
+\newlabel{sec:con}{{7}{12}}
+\bibstyle{abbrv}
+\bibdata{ref}

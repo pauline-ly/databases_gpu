@@ -3,17 +3,32 @@
 //
 
 //#include <cstdint>
+#include "cuda_runtime.h"
 #include "slab_hash.h"
 #include "include/dy_hash.h"
-#include <cstdio>
+//#include <cstdio>
+#include <thrust/device_vector.h>
+#include <thrust/host_vector.h>
+#include <thrust/generate.h>
+#include <thrust/copy.h>
+#include <thrust/sort.h>
+
+#include <helper_functions.h>
+#include <helper_cuda.h>
 #define ulong unsigned long long int
 #define make_ulong(k,v) ((((ulong)v)<<32)+k)
 #define getk_from_ulong(kv) ((unsigned)((kv)&0xffffffff))
 #define getv_from_ulong(kv) ((unsigned)((kv)>>32))
 #define gtid (blockIdx.x * blockDim.x + threadIdx.x)
 
+#define RAW_PTR(x) thrust::raw_pointer_cast((x).data())
+
+#define NUM_DATA 100000000
+
 #define DE_ACTIVE 0
 #define ACTIVE 1
+#define TYPE unsigned int
+
 
 
 
@@ -200,9 +215,9 @@ public:
                 return true;
 
 
-//            if(NULL == (Node*)(tmp->getnext())){
-//                alloc_new_node(tmp);
-//            }
+            if(NULL == (Node*)(tmp->getnext())){
+                alloc_new_node(tmp);
+            }
             tmp=(Node*)(tmp->getnext());
         }
 
@@ -271,22 +286,22 @@ kernel_search(SlabHash* ht){
 }
 
 __global__ void
-kernel_test(SlabHash* ht){
-    int id_in_block=threadIdx.x ;
-    int tid=gtid;
-    int id_of_warp=tid>>5;
-    //int id_in_warp=id_in_block&0x1f;
+kernel_test(SlabHash* ht,TYPE *key,TYPE* value) {
+    int tid = gtid;
+    int id_of_warp = (blockIdx.x * blockDim.x + threadIdx.x) >> 5;
+    int step = (gridDim.x * blockDim.x) >> 5;
+    int elem_num=1000;
 
-    for(int i=0;i<2;i++)
-        ht->slist[id_in_block%TABLE_NUM].warp_insert(id_of_warp*100+i+1,id_of_warp*100+2+i);
-
+    for (; id_of_warp < elem_num; id_of_warp += step) {
+        ht->slist[id_of_warp % TABLE_NUM].warp_insert(id_of_warp * 100 + + 1, id_of_warp * 100 + 2 );
+    }
     __syncthreads();
-    if(gtid==0)
-        for(int i=0;i<TABLE_NUM;i++)
+    if (gtid == 0) {
+        for (int i = 0; i < TABLE_NUM; i++) {
+            printf("listnum:%d\n", i);
             ht->slist[i].show_list(50);
-//    if(id_in_warp==20 && warp_id_in_block ==0){
-//        ht->slist[warp_id_in_block%TABLE_NUM].first->show("over",warp_id_in_block);
-//    }
+        }
+    }
 }
 
 __global__ void
@@ -295,7 +310,76 @@ set_mempool(MemPool* pool){
 }
 
 using namespace std;
-void simple_gpu_test(){
+
+
+unsigned int* Read_Data(char* filename)
+{
+//     printf("info:filename:%s\n",filename);
+    int size=NUM_DATA;
+    if(strcmp(filename,"/home/udms/ly/finally-test/data/twitter.dat")==0)
+        size=size/2;
+    if(strcmp(filename,"/home/udms/ly/finally-test/data/tpc-h.dat")==0)
+        size=size/2;
+    if(strcmp(filename,"/home/udms/ly/data/real_2018/l32.dat")==0)
+        size=size/10;
+
+    FILE *fid;
+    fid = fopen(filename, "rb");
+    unsigned int *pos;
+    pos = (unsigned int *)malloc(sizeof(unsigned int)*size);//申请内存空间，大小为n个int长度
+
+    if (fid == NULL)
+    {
+        printf("the data file is unavailable.\n");
+        exit(1);
+        return pos;
+    }
+    fread(pos, sizeof(unsigned int), size, fid);
+    fclose(fid);
+    return pos;
+}
+
+
+bool init_kv(TYPE *key,TYPE *value,char *filename,int size){
+
+//    key=Read_Data(filename);
+
+//     GenerateUniqueRandomNumbers(key, pool_size);
+
+    for (int i = 0; i < size; i++) {
+         key[i]=(TYPE) 3 * i + 3 + 1;
+        value[i] =(TYPE) 3 * i + 3 + 1;
+//        chck[i]  = 0;
+    }
+    return true;
+}
+
+using namespace thrust;
+
+void simple_gpu_test(char *filename){
+    printf("=========init over==========\n");
+    int size=NUM_DATA;
+//    if(strcmp(filename,"/home/udms/ly/finally-test/data/twitter.dat")==0)
+//        size=size/2;
+//    if(strcmp(filename,"/home/udms/ly/finally-test/data/tpc-h.dat")==0)
+//        size=size/2;
+//    if(strcmp(filename,"/home/udms/ly/data/real_2018/l32.dat")==0)
+//        size=size/10;
+//
+
+    // alloc data
+    thrust::host_vector<TYPE> key(size+1);
+    thrust::host_vector<TYPE> value(size+1);
+
+
+    //init data
+    init_kv(RAW_PTR(key),RAW_PTR(value),filename,size);
+    printf("=========init over==========\n");
+
+    // copy to  gpu
+    thrust::device_vector<TYPE> dkey(key);
+    thrust::device_vector<TYPE> dvalue(value);
+
 
     SlabHash hash;
     SlabHash* dhash;
@@ -306,7 +390,7 @@ void simple_gpu_test(){
     cudaMalloc((void**)&d_pool,sizeof(MemPool));
     cudaMemcpy(d_pool,&h_pool, sizeof(MemPool),cudaMemcpyHostToDevice);
     set_mempool<<<1,1>>>(d_pool);
-    kernel_test<<<1,512>>>(dhash);
-    cudaDeviceSynchronize();
+    kernel_test<<<56,512>>>(dhash,RAW_PTR(dkey),RAW_PTR(dvalue));
+//    cudaDeviceSynchronize();
     cudaGetLastError();
 }
