@@ -6,6 +6,7 @@
 #include "cuda_runtime.h"
 #include "slab_hash.h"
 #include "include/dy_hash.h"
+#include "gputimer.h"
 //#include <cstdio>
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
@@ -23,7 +24,9 @@
 
 #define RAW_PTR(x) thrust::raw_pointer_cast((x).data())
 
-#define NUM_DATA 100000000
+//#define NUM_DATA 100000000
+#define NUM_DATA 1000000
+//#define NUM_DATA 500
 
 #define DE_ACTIVE 0
 #define ACTIVE 1
@@ -290,18 +293,19 @@ kernel_test(SlabHash* ht,TYPE *key,TYPE* value) {
     int tid = gtid;
     int id_of_warp = (blockIdx.x * blockDim.x + threadIdx.x) >> 5;
     int step = (gridDim.x * blockDim.x) >> 5;
-    int elem_num=1000;
+    int elem_num=NUM_DATA;
 
     for (; id_of_warp < elem_num; id_of_warp += step) {
-        ht->slist[id_of_warp % TABLE_NUM].warp_insert(id_of_warp * 100 + + 1, id_of_warp * 100 + 2 );
+//        ht->slist[id_of_warp % TABLE_NUM].warp_insert(id_of_warp * 100  + 1, id_of_warp * 100 + 2 );
+        ht->slist[id_of_warp % TABLE_NUM].warp_insert(key[id_of_warp], value[id_of_warp] );
     }
     __syncthreads();
-    if (gtid == 0) {
-        for (int i = 0; i < TABLE_NUM; i++) {
-            printf("listnum:%d\n", i);
-            ht->slist[i].show_list(50);
-        }
-    }
+//    if (gtid == 0) {
+//        for (int i = 0; i < TABLE_NUM; i++) {
+//            printf("listnum:%d\n", i);
+//            ht->slist[i].show_list(50);
+//        }
+//    }
 }
 
 __global__ void
@@ -316,11 +320,11 @@ unsigned int* Read_Data(char* filename)
 {
 //     printf("info:filename:%s\n",filename);
     int size=NUM_DATA;
-    if(strcmp(filename,"/home/udms/ly/finally-test/data/twitter.dat")==0)
+    if(strcmp(filename,"/home/udms/ly/GPU_Hash/finally-test/data/twitter.dat")==0)
         size=size/2;
-    if(strcmp(filename,"/home/udms/ly/finally-test/data/tpc-h.dat")==0)
+    if(strcmp(filename,"/home/udms/ly/GPU_Hash/finally-test/data/tpc-h.dat")==0)
         size=size/2;
-    if(strcmp(filename,"/home/udms/ly/data/real_2018/l32.dat")==0)
+    if(strcmp(filename,"/home/udms/ly/GPU_Hash/finally-test/data/real_2018/l32.dat")==0)
         size=size/10;
 
     FILE *fid;
@@ -342,12 +346,13 @@ unsigned int* Read_Data(char* filename)
 
 bool init_kv(TYPE *key,TYPE *value,char *filename,int size){
 
-//    key=Read_Data(filename);
+    TYPE *k;
+    k=Read_Data(filename);
 
 //     GenerateUniqueRandomNumbers(key, pool_size);
 
     for (int i = 0; i < size; i++) {
-         key[i]=(TYPE) 3 * i + 3 + 1;
+        key[i]=k[i];
         value[i] =(TYPE) 3 * i + 3 + 1;
 //        chck[i]  = 0;
     }
@@ -357,15 +362,15 @@ bool init_kv(TYPE *key,TYPE *value,char *filename,int size){
 using namespace thrust;
 
 void simple_gpu_test(char *filename){
-    printf("=========init over==========\n");
+
     int size=NUM_DATA;
-//    if(strcmp(filename,"/home/udms/ly/finally-test/data/twitter.dat")==0)
-//        size=size/2;
-//    if(strcmp(filename,"/home/udms/ly/finally-test/data/tpc-h.dat")==0)
-//        size=size/2;
-//    if(strcmp(filename,"/home/udms/ly/data/real_2018/l32.dat")==0)
-//        size=size/10;
-//
+    if(strcmp(filename,"/home/udms/ly/GPU_Hash/finally-test/data/twitter.dat")==0)
+        size=size/2;
+    if(strcmp(filename,"/home/udms/ly/GPU_Hash/finally-test/data/tpc-h.dat")==0)
+        size=size/2;
+    if(strcmp(filename,"/home/udms/ly/GPU_Hash/finally-test/data/real_2018/l32.dat")==0)
+        size=size/10;
+
 
     // alloc data
     thrust::host_vector<TYPE> key(size+1);
@@ -390,7 +395,13 @@ void simple_gpu_test(char *filename){
     cudaMalloc((void**)&d_pool,sizeof(MemPool));
     cudaMemcpy(d_pool,&h_pool, sizeof(MemPool),cudaMemcpyHostToDevice);
     set_mempool<<<1,1>>>(d_pool);
+    GpuTimer timer;
+    timer.Start();
     kernel_test<<<56,512>>>(dhash,RAW_PTR(dkey),RAW_PTR(dvalue));
-//    cudaDeviceSynchronize();
+    timer.Stop();
+    double  diff = timer.Elapsed()*1000000;
+    printf("<<<time>>> %.2lf ( %.2f)\n",
+           (double) diff, (double) (size) / diff);
+    cudaDeviceSynchronize();
     cudaGetLastError();
 }

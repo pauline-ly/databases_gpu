@@ -12,20 +12,20 @@
 
 using namespace std;
 TYPE *key;
-#define NUM_DATA 100000000
+#define NUM_DATA 1000000
 
-
+//#define NUM_DATA 500
 
 
 unsigned int* DataRead_CMode(char* filename)
 {
 //     printf("info:filename:%s\n",filename);
     int size=NUM_DATA;
-    if(strcmp(filename,"/home/udms/ly/finally-test/data/twitter.dat")==0)
+    if(strcmp(filename,"/home/udms/ly/GPU_Hash/finally-test/data/twitter.dat")==0)
         size=size/2;
-    if(strcmp(filename,"/home/udms/ly/finally-test/data/tpc-h.dat")==0)
+    if(strcmp(filename,"/home/udms/ly/GPU_Hash/finally-test/data/tpc-h.dat")==0)
         size=size/2;
-    if(strcmp(filename,"/home/udms/ly/data/real_2018/l32.dat")==0)
+    if(strcmp(filename,"/home/udms/ly/GPU_Hash/finally-test/data/real_2018/l32.dat")==0)
         size=size/10;
 
     FILE *fid;
@@ -50,19 +50,19 @@ unsigned int* DataRead_CMode(char* filename)
 
 int main(int argc, char** argv) {
 
-//    char* name;
-//    if (argc >=2 )
-//    {
-////         num_more=atoi(argv[1]);
-////         no_data=atoi(argv[2]);
-//        name=argv[1];
+    char* name;
+    if (argc >=2 )
+    {
+//         num_more=atoi(argv[1]);
+//         no_data=atoi(argv[2]);
+        name=argv[1];
 //
-//    }else{
-////        printf("run using : ./linear file_neme");
-//    }
+    }else{
+        printf("run using : ./linear file_neme");
+    }
 //    //test_size_new_api();
     printf("main \n");
-    simple_gpu_test();
+    simple_gpu_test(name);
 
     return 0;
 }

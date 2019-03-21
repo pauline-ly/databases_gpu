@@ -1,1 +1,0 @@
-/usr/bin/c++   -g   CMakeFiles/linear.dir/Main.cpp.o CMakeFiles/linear.dir/linear_generated_slab_hash.cu.o  -o linear -rdynamic /usr/local/cuda/lib64/libcudart_static.a -lpthread -ldl -lrt -lpthread -lgmock -lgtest 

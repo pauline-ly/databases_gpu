@@ -9,7 +9,7 @@
 
 
 
-void simple_gpu_test(char *name=NULL);
+void simple_gpu_test(char *name);
 bool  init_kv(unsigned int *key,unsigned int *value,char *filename,int size);
 unsigned int* Read_Data(char* filename);
 

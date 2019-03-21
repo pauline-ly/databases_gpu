@@ -18,6 +18,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(D_S
         Main.cpp
         slab_hash.cu slab_hash.h
+        gputimer.h
         )
 cuda_add_executable(linear ${D_S})
 target_link_libraries(linear pthread)
