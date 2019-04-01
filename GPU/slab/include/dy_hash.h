@@ -25,7 +25,8 @@
 #define BUCKET_SIZE (1<<BUCKET_SIZE_BIT)
 #define MASK_CHECK_key 0xfffffffc
 #define MASK_CHECK_kv  0x2aaaaaaa
-#define TABLE_NUM 10
+#define TABLE_NUM 100001
+#define NUM_DATA 1000000
 
 
 
@@ -40,8 +41,9 @@
 //#define DELAY_DOWN_SIZE_TIME 20
 // 每个warp一个池子
 #define MEM_POOL_NUM (THREAD_NUM* BLOCK_NUM /32)
+//#define MEM_POOL_NUM 262144
 // 一个池子16个Node
-#define NODE_OF_POOL 32
+#define NODE_OF_POOL 256
 
 
 
@@ -51,7 +53,8 @@
 #define cuckoo_cu_speed 1
 #define insert_debug 0
 #define CAS_debug 0
-#define kv_in_Node 1
+#define kv_in_Node 0
+#define show_list_in_kernel 0
 #define show_memory 0
 #define check_memory_alloc 0
 #define api_info 0

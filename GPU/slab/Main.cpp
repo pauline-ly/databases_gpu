@@ -12,37 +12,37 @@
 
 using namespace std;
 TYPE *key;
-#define NUM_DATA 1000000
+//#define NUM_DATA 500
 
 //#define NUM_DATA 500
 
-
-unsigned int* DataRead_CMode(char* filename)
-{
-//     printf("info:filename:%s\n",filename);
-    int size=NUM_DATA;
-    if(strcmp(filename,"/home/udms/ly/GPU_Hash/finally-test/data/twitter.dat")==0)
-        size=size/2;
-    if(strcmp(filename,"/home/udms/ly/GPU_Hash/finally-test/data/tpc-h.dat")==0)
-        size=size/2;
-    if(strcmp(filename,"/home/udms/ly/GPU_Hash/finally-test/data/real_2018/l32.dat")==0)
-        size=size/10;
-
-    FILE *fid;
-    fid = fopen(filename, "rb");
-    unsigned int *pos;
-    pos = (unsigned int *)malloc(sizeof(unsigned int)*size);//申请内存空间，大小为n个int长度
-    int i;
-    if (fid == NULL)
-    {
-        printf("the data file is unavailable.\n");
-        exit(1);
-        return pos;
-    }
-    fread(pos, sizeof(unsigned int), size, fid);
-    fclose(fid);
-    return pos;
-}
+//
+//unsigned int* DataRead_CMode(char* filename)
+//{
+////     printf("info:filename:%s\n",filename);
+//    int size=NUM_DATA;
+//    if(strcmp(filename,"/home/udms/ly/GPU_Hash/finally-test/data/twitter.dat")==0)
+//        size=size/2;
+//    if(strcmp(filename,"/home/udms/ly/GPU_Hash/finally-test/data/tpc-h.dat")==0)
+//        size=size/2;
+//    if(strcmp(filename,"/home/udms/ly/GPU_Hash/finally-test/data/real_2018/l32.dat")==0)
+//        size=size/10;
+//
+//    FILE *fid;
+//    fid = fopen(filename, "rb");
+//    unsigned int *pos;
+//    pos = (unsigned int *)malloc(sizeof(unsigned int)*size);//申请内存空间，大小为n个int长度
+//    int i;
+//    if (fid == NULL)
+//    {
+//        printf("the data file is unavailable.\n");
+//        exit(1);
+//        return pos;
+//    }
+//    fread(pos, sizeof(unsigned int), size, fid);
+//    fclose(fid);
+//    return pos;
+//}
 
 
 

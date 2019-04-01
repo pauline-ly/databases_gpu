@@ -25,7 +25,7 @@
 #define RAW_PTR(x) thrust::raw_pointer_cast((x).data())
 
 //#define NUM_DATA 100000000
-#define NUM_DATA 1000000
+//#define NUM_DATA 500
 //#define NUM_DATA 500
 
 #define DE_ACTIVE 0
@@ -112,7 +112,8 @@ public:
 #endif
         int tid = gtid>>5;
         int old=atomicInc(&pos[tid],NODE_OF_POOL+10);
-        if(old>=NODE_OF_POOL) return NULL;
+        if(old>=NODE_OF_POOL)
+            return NULL;
 #if check_memory_alloc
         printf("get one:%d loc:%llx\n",old,&data[tid][old]);
 #endif
@@ -202,9 +203,8 @@ public:
         assert(tmp!=NULL);
 
         int is_active=ACTIVE;
-        int i=0;
+
         while(tmp!=NULL){
-            if(i++ > 5) return false;
 #if insert_debug
             if(id_in_warp==0)  tmp->show("check in main while in insert",k);
 #endif
@@ -216,7 +216,6 @@ public:
             // check null
             if( check_target_and_CAS(k,v,is_active,0,tmp) )
                 return true;
-
 
             if(NULL == (Node*)(tmp->getnext())){
                 alloc_new_node(tmp);
@@ -245,12 +244,11 @@ public:
     }
 
 
-    __device__ bool warp_search(int k,int v,int write_pos,TYPE* value){
+    __device__ bool warp_search(int k,int write_pos,TYPE* value){
         Node* tmp=first;
         assert(tmp!=NULL);
-        // find
         while(tmp!=NULL) {
-            if( check_target_and_return_value(k,tmp,write_pos,value) )
+            if(check_target_and_return_value(k,tmp,write_pos,value))
                 return true;
             tmp=(Node*)(tmp->getnext());
         }
@@ -264,7 +262,7 @@ public:
             tmp=(Node*)(tmp->getnext());
         }
     }
-};
+}; // class slablist
 
 
 struct SlabHash{
@@ -274,38 +272,46 @@ public:
 
 
 __global__ void
-kernel_search(SlabHash* ht){
-    int id_in_block=threadIdx.x ;
-    int warp_id_in_block=id_in_block>>5;
-    int id_in_warp=id_in_block&0x1f;
+kernel_find_test(SlabHash* ht,TYPE *key,TYPE* value,int size){
+    int tid = gtid;
+    int id_of_warp = (tid) >> 5;
+    int step = (gridDim.x * blockDim.x) >> 5;
 
-//    ht->slist[id_in_block%TABLE_NUM].warp_search(warp_id_in_block*10+1,warp_id_in_block*10+2);
-
-    __syncthreads();
-
-    if(id_in_warp==20 && warp_id_in_block ==0){
-        ht->slist[warp_id_in_block%TABLE_NUM].first->show("over",warp_id_in_block);
+    for (; id_of_warp < size; id_of_warp += step) {
+        int k=key[id_of_warp];
+        ht->slist[k % TABLE_NUM].warp_search(k,id_of_warp, value );
     }
+#if show_list_in_kernel
+    __syncthreads();
+    if (gtid == 0) {
+        for (int i = 0; i < TABLE_NUM; i++) {
+            printf("listnum:%d\n", i);
+            ht->slist[i].show_list(300);
+        }
+    }
+#endif
 }
 
 __global__ void
-kernel_test(SlabHash* ht,TYPE *key,TYPE* value) {
+kernel_test(SlabHash* ht,TYPE *key,TYPE* value,int size) {
     int tid = gtid;
-    int id_of_warp = (blockIdx.x * blockDim.x + threadIdx.x) >> 5;
+    int id_of_warp = (tid) >> 5;
     int step = (gridDim.x * blockDim.x) >> 5;
-    int elem_num=NUM_DATA;
 
-    for (; id_of_warp < elem_num; id_of_warp += step) {
-//        ht->slist[id_of_warp % TABLE_NUM].warp_insert(id_of_warp * 100  + 1, id_of_warp * 100 + 2 );
-        ht->slist[id_of_warp % TABLE_NUM].warp_insert(key[id_of_warp], value[id_of_warp] );
+    for (; id_of_warp < size; id_of_warp += step) {
+        int k=key[id_of_warp];
+        int v=value[id_of_warp];
+        ht->slist[k % TABLE_NUM].warp_insert(k, v);
     }
+#if show_list_in_kernel
     __syncthreads();
-//    if (gtid == 0) {
-//        for (int i = 0; i < TABLE_NUM; i++) {
-//            printf("listnum:%d\n", i);
-//            ht->slist[i].show_list(50);
-//        }
-//    }
+    if (gtid == 0) {
+        for (int i = 0; i < TABLE_NUM; i++) {
+            printf("listnum:%d\n", i);
+            ht->slist[i].show_list(300);
+        }
+    }
+#endif
 }
 
 __global__ void
@@ -346,20 +352,35 @@ unsigned int* Read_Data(char* filename)
 
 bool init_kv(TYPE *key,TYPE *value,char *filename,int size){
 
-    TYPE *k;
-    k=Read_Data(filename);
+//    TYPE *k;
+//    k=Read_Data(filename);
 
 //     GenerateUniqueRandomNumbers(key, pool_size);
 
     for (int i = 0; i < size; i++) {
-        key[i]=k[i];
-        value[i] =(TYPE) 3 * i + 3 + 1;
+//        key[i]=k[i];
+        key[i] =(TYPE) i;
+//        value[i] =(TYPE) 3 * i + 3 + 1;
+        value[i] =(TYPE) i;
 //        chck[i]  = 0;
     }
+//    for (int i = 0; i < size; i++) {
+//        printf("k:%d   v:%d\n",key[i],value[i]);
+////        chck[i]  = 0;
+//    }
     return true;
 }
 
 using namespace thrust;
+void check_result(TYPE* key,TYPE* value,TYPE* check,int size){
+    int tmp=0;
+    for(int i=0;i<size;i++){
+        if(value[i]!=check[i]){
+            if(tmp++<20) printf("false: %d :k:%d v:%d find:%d\n",i,key[i],value[i],check[i]);
+        }
+    }
+    printf("check result:%d insert ,find %d ,not find %d (%d)\n",size,size-tmp,tmp,tmp*1.0/size);
+}
 
 void simple_gpu_test(char *filename){
 
@@ -384,24 +405,45 @@ void simple_gpu_test(char *filename){
     // copy to  gpu
     thrust::device_vector<TYPE> dkey(key);
     thrust::device_vector<TYPE> dvalue(value);
+    thrust::device_vector<TYPE> dcheck(size+1);
 
-
+    // 初始化hash表
     SlabHash hash;
     SlabHash* dhash;
     cudaMalloc((void**)&dhash,sizeof(SlabHash));
     cudaMemcpy(dhash,&hash, sizeof(SlabHash),cudaMemcpyHostToDevice);
+    // 初始化 pool
     MemPool h_pool(0);
     MemPool *d_pool;
     cudaMalloc((void**)&d_pool,sizeof(MemPool));
     cudaMemcpy(d_pool,&h_pool, sizeof(MemPool),cudaMemcpyHostToDevice);
     set_mempool<<<1,1>>>(d_pool);
+
+
+    // 插入数据
     GpuTimer timer;
     timer.Start();
-    kernel_test<<<56,512>>>(dhash,RAW_PTR(dkey),RAW_PTR(dvalue));
+    kernel_test<<<512,512>>>(dhash,RAW_PTR(dkey),RAW_PTR(dvalue),size);
     timer.Stop();
     double  diff = timer.Elapsed()*1000000;
     printf("<<<time>>> %.2lf ( %.2f)\n",
            (double) diff, (double) (size) / diff);
     cudaDeviceSynchronize();
     cudaGetLastError();
+
+
+    // find 数据
+    timer.Start();
+    kernel_find_test<<<512,512>>>(dhash,RAW_PTR(dkey),RAW_PTR(dcheck),size);
+    timer.Stop();
+    diff = timer.Elapsed()*1000000;
+    printf("<<<time>>> %.2lf ( %.2f)\n",
+           (double) diff, (double) (size) / diff);
+    cudaDeviceSynchronize();
+    cudaGetLastError();
+
+    thrust::host_vector<TYPE> check(dcheck);
+    check_search_result(RAW_PTR(key),RAW_PTR(value),RAW_PTR(check),size);
+
+
 }
