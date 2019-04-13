@@ -23,38 +23,42 @@
 #define BUCKET_NUM  32
 #define BUCKET_SIZE_BIT 5
 #define BUCKET_SIZE (1<<BUCKET_SIZE_BIT)
-#define MASK_CHECK_key 0xfffffffc
-#define MASK_CHECK_kv  0x2aaaaaaa
-#define TABLE_NUM 100001
-#define NUM_DATA 1000000
+//#define MASK_CHECK_key 0xfffffffc
+//#define MASK_CHECK_kv  0x2aaaaaaa
+/// k loc: 0 2 4 6 v loc: 1 3 5 7
+#define MASK_CHECK_kv  0x15555555
 
+/// seting of test
+#define TABLE_NUM 1000001
+#define NUM_DATA  10000000
+
+#define THREAD_NUM 512
+#define BLOCK_NUM 128
+
+//#define MEM_POOL_NUM (THREAD_NUM* BLOCK_NUM /32)
+#define MEM_POOL_NUM BLOCK_NUM
+// zuida  4*1024*1024*1024 / 32*4*BLOCK_NUM =32*1024*1024/BLOCK_NUM
+#define NODE_OF_POOL 128*1024
 
 
 /// batch test
 //#define SIZE_KV (sizeof(TYPE)*3)  /// size :k v hash
 //#define max_input_size ((2UL*1024*1024*1024)/SIZE_KV)
 
-
-/// gpu kernel
-#define THREAD_NUM 512
-#define BLOCK_NUM 512
-//#define DELAY_DOWN_SIZE_TIME 20
-// 每个warp一个池子
-#define MEM_POOL_NUM (THREAD_NUM* BLOCK_NUM /32)
-//#define MEM_POOL_NUM 262144
-// 一个池子16个Node
-#define NODE_OF_POOL 256
-
-
+/// seting of hash
+#define CAS1 1
+#define ADD0 0
+#define using_CAS_OR_ADD CAS1
+#define using_block_
 
 /// for debug
-
 #define size_info 0
 #define cuckoo_cu_speed 1
 #define insert_debug 0
 #define CAS_debug 0
 #define kv_in_Node 0
 #define show_list_in_kernel 0
+#define show_node_alloc 0
 #define show_memory 0
 #define check_memory_alloc 0
 #define api_info 0
@@ -64,18 +68,7 @@
 #define head_info 0
 
 
-#define  check_search_result(key,check,value, size) { \
-    TYPE tmp = 0;                                    \
-    for (TYPE i = 0; i < size; i++) {                \
-        if (check[i] !=value[i]) {                  \
-           if (tmp < 0)                               \
-                printf("check i:%d error k:%d search:%d except:%d \n", i, key[i], check[i], value[i]);\
-            tmp++;                              \
-        }                           \
-    }                                       \
-    if(tmp!=0)printf("\t%d/%d not pass:abort %.2f\n", tmp, size, tmp * 1.0 / size);         \
-    memset(check,0,sizeof(TYPE)*size);              \
-}
+
 
 
 #endif //LINEAR_DY_HASH_H

@@ -4,6 +4,7 @@ project(slabhash)
 #SET(CMAKE_CXX_COMPILER “/Applications/Xcode.app/Contents/Developer/usr/bin/g++”)
 message(STATUS "optional:-std=c++11")
 find_package(CUDA QUIET REQUIRED)
+#set_target_properties(PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 
 
@@ -18,7 +19,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(D_S
         Main.cpp
         slab_hash.cu slab_hash.h
-        gputimer.h
+        include/gputimer.h
         )
 cuda_add_executable(linear ${D_S})
 target_link_libraries(linear pthread)
