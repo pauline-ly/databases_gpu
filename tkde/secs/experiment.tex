@@ -1,31 +1,32 @@
 \section{experimental evaluation}\label{sec:exp}
-In this section, we conduct extensive experiments by comparing the proposed hash table designs with several state-of-the-art approaches for GPU-based hash tables. 
-We will introduce the experimental setup and the discuss the results. 
+In this section, we conduct extensive experiments by comparing the proposed hash table design \voter with several state-of-the-art approaches for GPU-based hash tables. 
+Section~\ref{sec:exp:setup} introduces the experimental setup. 
+Sections~\ref{sec:exp:tune}, \ref{sec:exp:static} and \ref{sec:exp:dynamic} presents the discussions on the sensitivity analysis of \voter, the static and the dynamic experiments respectively.
 
 \subsection{Experiment Setup}\label{sec:exp:setup}
 
-\vspace{1mm}\noindent\textbf{Baselines.} We compare the proposed approach in this paper with several state-of-the-art hash table implementations on GPUs and CPUs. 
+\vspace{1mm}\noindent\textbf{Baselines.} We compare \voter with several state-of-the-art hash table implementations on GPUs. which are listed as the following:
 \begin{itemize}
 	\item \cudpp is a popular CUDA primitive library\footnote{https://github.com/cudpp/cudpp} which contains the cuckoo hash table implementation published in~\cite{alcantara2009real}. 
 	For \cudpp, each hash value stores only one KV pair with 64 bits size (32 bits for key and 32 bits for value). 
 	\cudpp only supports \formal{insert} and \formal{find} operations. 
-	\item \megakv is a state-of-the-art approach for GPU-based key value store published in~\cite{zhang2015mega}. \megakv employs a cuckoo hash as well and
+	\item \megakv is a warp-centric approach for GPU-based key value store published in~\cite{zhang2015mega}. \megakv employs a cuckoo hash as well and
 	it allocates a bucket for each hash value. However, it does not lock a bucket when performing update. Instead, it uses intra-block synchronization to resolve race condition. 
-	\item \linear is a GPU-based hash table which uses linear open addressing to resolve conflicts \cite{hong2010mapcg}. 
-	\item \google is an efficient CPU-based hash table implementation\footnote{https://github.com/sparsehash/sparsehash-c11/}. We choose the \emph{dense\_hash\_map} implementation since it provides the best efficiency.
+	\item \slab is a state-of-the-art GPU-based dynamic hash table \cite{ashkiani2018dynamic}, which employs chaining and dedicated memory allocator for resizing.
+	%\item \google is an efficient CPU-based hash table implementation\footnote{https://github.com/sparsehash/sparsehash-c11/}. We choose the \emph{dense\_hash\_map} implementation since it provides the best efficiency.
 	\item \voter is the approach proposed in this paper.
 \end{itemize}
-We adopt the original implementations of \cudpp and \google from their corresponding inventors. 
-For \megakv, we note that its intra-block synchronization could lead to inconsistency issue as well as a large number of insertion failures, especially when the filled factor is high.  
-Thus, we revise its code by replacing the intra-block synchronization with atomicExch to resolve the race condition. The adoption of atomicExch preserves the design principle of \megakv for \emph{not} locking the entire bucket for updates. Moreover, it leads to less insertion failures and similar performance against its original implementation. 
-For \linear, we implement the CUDA version of the algorithm proposed in \cite{hong2010mapcg}.
+We adopt the original implementations of the compared baselines from their corresponding inventors. 
+%For \megakv, we note that its intra-block synchronization could lead to inconsistency issue as well as a large number of insertion failures, especially when the filled factor is high.  
+%Thus, we revise its code by replacing the intra-block synchronization with atomicExch to resolve the race condition. The adoption of atomicExch preserves the design principle of \megakv for \emph{not} locking the entire bucket for updates. Moreover, it leads to less insertion failures and similar performance against its original implementation. 
 
-Note that we do not compare with the dynamic GPU hash approach proposed in \cite{ashkiani2018dynamic} for two major reasons. First, we cannot obtain the original implementation from its authors. Second, the approach devises a dedicated memory allocator other than cudaMalloc. A dedicated allocator will improve the performance but add complexity the system. Additionally, it needs to occupy a large memory in advance and is not transparent to other GPU applications.
-In contrast, our proposed approach only uses native allocator supported. 
-We do not compare with \cite{breslow2016horton} since it only improves \megakv marginally using a more costly insertion process.
+%Note that we do not compare with the dynamic GPU hash approach proposed in \cite{ashkiani2018dynamic} for two major reasons. First, we cannot obtain the original implementation from its authors. Second, the approach devises a dedicated memory allocator other than cudaMalloc. A dedicated allocator will improve the performance but add complexity the system. Additionally, it needs to occupy a large memory in advance and is not transparent to other GPU applications.
+%In contrast, our proposed approach only uses native allocator supported. 
+%We do not compare with \cite{breslow2016horton} since it only improves \megakv marginally using a more costly insertion process.
 
 \begin{table}[t]
 	\caption{The datasets used in the experiments.}
+	\vspace{-1.5em}
 	\label{table:exp_data_sets}
 	\centering
 	\begin{tabular}{|c|c|c|c|}
@@ -42,17 +43,19 @@ We do not compare with \cite{breslow2016horton} since it only improves \megakv m
 \begin{table}[t]
 	\centering
 	\caption{Parameters in the experiments}
+	\vspace{-1.5em}
 	\label{tbl:parameters}
 	\begin{tabular}{|c|c|c|}
 		\hline
 		\textbf{Parameter} & \textbf{Settings} & \textbf{Default} \\ \hline
-		$\alpha$ & 25\%, 30\%, 35\%, 40\%, 45\% & 40\% \\ \hline
-		$\beta$  & 75\%, 80\%, 85\%, 90\%, 95\% & 90\% \\ \hline
-		$r$ & 0.1, 0.2, 0.3, 0.4, 0.5 & 0.4 \\ \hline
+		$\alpha$ & 20\%, 25\%, 30\%, 35\%, 40\% & 30\% \\ \hline
+		$\theta$  & 70\%, 75\%, 80\%, 85\%, 90\% & 80\% \\ \hline
+		$r$ & 0.1, 0.2, 0.3, 0.4, 0.5 & 0.3 \\ \hline
+		batch size & 2e5, 4e5, 6e5, 8e5, 10e5 & 10e5 \\ \hline
 	\end{tabular}
 \end{table}
 
-\vspace{1mm}\noindent\textbf{Datasets.} We evaluate all compared approaches using several real world and synthetic datasets described as follows:
+\vspace{1mm}\noindent\textbf{Datasets.} We evaluate all compared approaches using several real world and the summary of the datasets can be found in Table~\ref{table:exp_data_sets}.
 \begin{itemize}
 	\item \dstwitter: Twitter is an online social network where users perform actions include \emph{tweet}, \emph{retweet}, \emph{quote} and \emph{reply}.
 	We crawl these actions for one week via Twitter stream API\footnote{https://dev.twitter.com/streaming/overview} on trending topics US president election, 2016 NBA finals and Euro 2016. The dataset contains 50,876,784 KV pairs.
@@ -61,8 +64,8 @@ We do not compare with \cite{breslow2016horton} since it only improves \megakv m
 	\item \dsrandom: Random is a synthetic dataset generated from a normal distribution. We have deduplicated the data and generate 100,000,000 KV pairs.  
 	\item \dsali: Databank is a PB-scale data warehouse that stores Alibaba's customer behavioral data for the year 2017. Due to confidentiality, we sample 10,000,000 transactions and the dataset contains 4,583,941 encrypted customer IDs as keys.
 \end{itemize}
-The summary of the datasets can be found in Table~\ref{table:exp_data_sets}.
-Since all GPU approaches (except for \voter) only supports 32 bits key and 32 bits value, we hash longer keys to 32 bits and truncate all values to 32 bits across all datasets. 
+
+
 
 
 
@@ -114,6 +117,7 @@ Under the static setting, we evaluate \formal{insert} and \formal{find} performa
 In particular, we insert all KV pairs from the datasets followed by issuing 1 million random search queries. 
 
 
+
 \begin{figure*}[ht]
 	\begin{minipage}{0.3\linewidth}\centering
 		\includegraphics[width=\linewidth]{pic/static-profi/warp.eps}
@@ -132,68 +136,6 @@ In particular, we insert all KV pairs from the datasets followed by issuing 1 mi
 	\caption{GPU profiling results for static hashing comparison.}
 	\label{fig:static:profile}
 \end{figure*}
-\begin{table*}[htp]\centering
-	\begin{minipage}{0.45\linewidth}\centering
-		\caption{The failure of TW (Percentages).}
-		\begin{tabular}{|c|c|c|c|c|c|}
-			\hline
-			& 0.75 & 0.8 & 0.85 & 0.9 & 0.95\\ \hline
-			Linear &0.0 & 0.0 &4.6e-5  & 1.1e-3 & 3.9e-1 \\ \hline
-			CUDPP & 0.0 & 0.0 &0.0  & 0.0 & 3.8e-5 \\ \hline
-			MegaKV & 3.4e-1 & 5.6e-1 &8.9e-1 & 1.4 & 2.0 \\ \hline
-			DyHash &0.0 & 0.0 &0.0  & 0.0 & 0.0 \\ \hline
-		\end{tabular}
-		\label{tab:fail:tw}
-	\end{minipage}
-	\begin{minipage}{0.45\linewidth}\centering
-		\caption{The failure of RE (Percentages).}
-		\begin{tabular}{|c|c|c|c|c|c|}
-			\hline
-			& 0.75 & 0.8 & 0.85 & 0.9 & 0.95\\ \hline
-			Linear &5.6e-3 & 1.5e-2 &1.8e-2  & 2.0e-2 & 2.0 \\ \hline
-			CUDPP & 0.0 & 0.0 &0.0  & 0.0 & 0.0 \\ \hline
-			MegaKV &5.1e-1 & 8.8e-1 &1.5  & 2.3 & 3.5 \\ \hline
-			DyHash &0.0 & 0.0 &0.0  & 1.0e-6 & 1.0e-6 \\ \hline
-		\end{tabular}
-		\label{tab:fail:re}
-	\end{minipage}
-	\begin{minipage}{0.45\linewidth}\centering
-		\caption{The failure of LINE (Percentages).}
-		\begin{tabular}{|c|c|c|c|c|c|}
-			\hline
-			& 0.75 & 0.8 & 0.85 & 0.9 & 0.95\\ \hline
-			Linear &0.0 & 0.0 &1.1e-4  & 1.8e-3 & 3.9e-1 \\ \hline
-			CUDPP & 0.0 & 0.0 &0.0  & 0.0 & 0.0 \\ \hline
-			MegaKV &4.6e-1 & 8.4e-1 &1.5  & 2.5 & 3.9 \\ \hline
-			DyHash &0.0 & 0.0 &0.0  & 2.0e-6 & 4.0e-6 \\ \hline
-		\end{tabular}
-		\label{tab:fail:line}
-	\end{minipage}
-	\begin{minipage}{0.45\linewidth}\centering
-		\caption{The failure of RAND (Percentages).}
-		\begin{tabular}{|c|c|c|c|c|c|}
-			\hline
-			& 0.75 & 0.8 & 0.85 & 0.9 & 0.95\\ \hline
-			Linear &8.4e-5 & 4.1e-4 &5.7e-4  & 8.7e-4 & 2.0 \\ \hline
-			CUDPP & 0.0 & 0.0 &0.0  & 0.0 & 0.0 \\ \hline
-			MegaKV &4.2e-1 & 7.9e-1 &1.4  & 2.4 & 3.9 \\ \hline
-			DyHash &0.0 & 0.0 &0.0  & 0.0 & 0.0 \\ \hline
-		\end{tabular}
-		\label{tab:fail:rand}
-	\end{minipage}
-	\begin{minipage}{0.45\linewidth}\centering
-		\caption{The failure of COM (Percentages).}
-		\begin{tabular}{|c|c|c|c|c|c|}
-			\hline
-			& 0.75 & 0.8 & 0.85 & 0.9 & 0.95\\ \hline
-			Linear &0.0 & 0.0 &2.0e-5  & 6.5e-4 & 2.5e-2 \\ \hline
-			CUDPP & 5.4e-3 & 5.3e-3 &5.1e-3  & 5.0e-3 & 5.3e-3 \\ \hline
-			MegaKV &6.1e-2 & 8.0e-1 &1.0  & 1.3 & 1.5 \\ \hline
-			DyHash &0.0 & 0.0 &0.0  & 0.0 & 7.1e-4 \\ \hline
-		\end{tabular}
-		\label{tab:fail:com}
-	\end{minipage}
-\end{table*}
 
 
 \vspace{1mm}\noindent\textbf{Dynamic Hashing Comparison (Section~\ref{sec:exp:dynamic}).}
@@ -201,9 +143,9 @@ Under the dynamic setting, we generate the workloads by batching the hash table 
 We partition the datasets into batches of $1$ million insertions. 
 For each batch, we augment $1$ million \formal{find} operations and $1 \cdot r$ million \formal{delete} operations,
 where $r$ is a parameter to balance insertions and deletions.
-After we exhaust all the batches obtained from the datasets, we rerun these batches by swapping the \formal{insert} and \formal{delete} operations in any batch. 
+After we exhaust all the batches, we rerun these batches by swapping the \formal{insert} and \formal{delete} operations in each batch. 
 We evaluate the performance of all compared approaches except \cudpp as it does not support deletions. 
-Since all approaches other than \voter are static hash tables, we double/half the memory usage followed by rehashing all KV pairs as their resizing strategy, if the corresponding filled factor falls out of the specified range. 
+Since \megakv is a static hash table, we double/half the memory usage followed by rehashing all KV pairs as its resizing strategy, if the corresponding filled factor falls out of the specified range. 
 Moreover, if an insertion failure is found for a compared approach, we trigger its resizing strategy.
 
 
@@ -222,15 +164,18 @@ We conduct all experiments on an Intel Xeon E5-2620 Server equipped with NVIDIA 
 
 
 
-\subsection{Parameter Tuning}
+\subsection{Sensitivity Analysis}\label{sec:exp:tune}
 
+\vspace{1mm}
+\noindent\textbf{Vary the number of tables.}
 A key parameter that affects the performance of \voter is the number of hash table chosen. For the static scenario, we present the throughput performance of \formal{insert} and \formal{find} for varying number of hash tables in Figure~\ref{fig:vary-table}, while fixing the memory space of the entire structure to ensure the default filled factor. 
 The throughput of \formal{insert} increases with more hash tables, since there are more alternative locations for inserting a KV pair. However, the marginal improvement drops for a larger number of hash tables. The throughput of \formal{find} falls with more hash tables as additional locations need to be scanned to locate a KV pair. Thus, one can tradeoff the performance between \formal{insert} and \formal{find} operations by varying the number of tables. In this paper, we choose three hash tables as our default implementation as it provides the best balance. 
 
-\subsection{Dynamic Resizing}
+\vspace{1mm}
+\noindent\textbf{Resizing analysis.}
 To validate the effectiveness of our resizing strategy proposed in Section~\ref{sec:dyn}, we compare it with rehashing. 
-For evaluating upsizing, we initialize \voter with all the data and the filled factor as the default upper bound $0.9$. Then, we perform one time upsizing, i.e., upsize one subtable, and compare our resizing strategy against rehashing all the entries in the subtable with Algorithm~\ref{algo:insert}.
-For evaluating downsizing, the setup is a mirror image of upsizing evaluation with an initializing filled factor as the default lower bound $0.4$. 
+For evaluating upsizing, we initialize \voter with all the data and the filled factor as the default upper bound $0.8$. Then, we perform one time upsizing, i.e., upsize one subtable, and compare our resizing strategy against rehashing all the entries in the subtable with Algorithm~\ref{algo:insert}.
+For evaluating downsizing, the setup is a mirror image of upsizing evaluation with an initializing filled factor as the default lower bound $0.3$. 
 The throughputs are reported in Figure~\ref{fig:resize}. 
 The throughput of rehashing for the upsizing scenario is severely limited, since the remaining subtables not being upsized are almost filled ($\theta=0.9$) and inserting KV pairs resulting frequent evictions.  
 In comparison, the downsizing throughput of rehashing is significantly faster due to a low filled ratio.
@@ -241,10 +186,7 @@ Our resizing strategy achieves compelling speedups over rehashing. Besides, it o
 
 \vspace{1mm}\noindent\textbf{Throughput Analysis.} We present the throughput of all compared approaches in Figure~\ref{fig:static} when varying the filled factor. 
 First of all, GPU-based approaches are orders of magnitude faster than \google (2  million ops for \formal{insert} and 6 million ops for \formal{find} on average), which validates the motivation of designing hash tables on GPUs. 
-Among GPU hash tables, \megakv delivers the best performance across all datasets except for \dsali. Nevertheless, for \formal{insert}, the drawback of \megakv is that it fails to insert some of the KV pairs. Tables~\ref{tab:fail:tw}-\ref{tab:fail:com} present the percentages of insertion failure for varying filled factor across all datasets. \megakv has up to 2.5\% failure rate for the default filled factor, which is the highest among all approaches. 
-Our proposed \voter has near-zero failure rate and achieves the 2nd best performance behind \megakv. We note that \cudpp obtains a significant advantage over all approaches in the \dsali dataset. This is because \cudpp will immediately terminate its GPU kernel once it finds some KV pairs cannot be inserted after a number of lookups. This explains why \cudpp has a superior performance since it early terminates on \dsali due to failed insertions (Table~\ref{tab:fail:com}). For \formal{find}, \megakv achieves the best performance as it only has two hash functions. This explains why \voter is slower since we use three hash tables and additional IO lookups are required for each \formal{find}. Both \megakv and \voter are faster than \cudpp and \linear since they employ the bucket mechanism for storing multiple KV pairs contiguously under the same hash value, which exhibits better coalesced memory access.  
-
-
+Among GPU hash tables, \megakv delivers the best performance across all datasets except for \dsali. Nevertheless, for \formal{insert}, the drawback of \megakv is that it fails to insert some of the KV pairs. 
 
 
 For interested readers, please find the throughput results for varying the filled factor across all datasets in the appendix (Figure~\ref{fig:static:all:insert} and~\ref{fig:static:all:search}). 

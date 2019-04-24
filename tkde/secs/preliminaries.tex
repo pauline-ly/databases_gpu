@@ -4,6 +4,7 @@ In this section, we first introduce some preliminaries on general hash tables an
 \begin{table}
 	\centering
 	\caption{Frequently Used Notations}
+	\vspace{-1.5em}
 	\label{tbl:stat:datasets}
 	\begin{tabular}{|c|l|}
 		\hline
@@ -12,7 +13,8 @@ In this section, we first introduce some preliminaries on general hash tables an
 		$h^i$	& the $i$th hash table \\ \hline
 		$|h^i|,n_i,m_i$	& range, table size and data size of $h^i$ \\ \hline
 		$wid,l$	& a warp ID and the $l$th lane of the warp \\ \hline
-		$\theta$& filled factor of the hash table \\ \hline
+		$\theta$& filled factor of the entire hash table \\ \hline
+		$\theta_i$& filled factor of hash table $i$ \\ \hline
 		$loc$	& a bucket in the hash table \\ \hline
 	\end{tabular}
 \end{table}
@@ -26,7 +28,7 @@ We repeat this process until an empty location is encountered.
 
 For a hash table with the hash function $h^i$, $|h^i|$ is defined to be the number of unique hash values for $h^i$ and $n_i$ to be the total memory size allocated for the hash table.
 A location or a hash value for $h^i$ is represented as $loc = h^i_j$ where $j \in [0,|h^i|-1]$.
-If the occupied space of the hash table is $m_i$, the filled factor of $h^i$ is denoted as $\theta_i = m_i / n_i$.
+If the occupied space of the hash table is $m_i$, the filled factor of $h^i$ is denoted as $\theta_i = m_i / n_i$. The overall filled factor of the cuckoo hash table is denoted as $\theta = (\sum_i m_i) / (\sum_i n_i)$.
 
 \subsection{GPU Architecture}
 
@@ -39,7 +41,7 @@ If the occupied space of the hash table is $m_i$, the filled factor of $h^i$ is 
 
 We focus on introducing the background of NVIDIA GPU architecture in this section due to its popularity and wide adoption of the CUDA programming language. 
 It is noted that our proposed approaches are not unique to NVIDIA GPUs and can be implemented on other GPU architectures as well. Figure~\ref{fig:arch} presents a high-level layout of a NVIDIA GPU. An application written in CUDA executes on GPUs through invoking the \emph{kernel} function. The kernel is organized as a number of \emph{thread blocks}, and one block executes all its threads on a \emph{streaming multiprocessor}, which contains a number of CUDA cores as depicted in the figure. Within a block, threads are divided into \emph{warps} of 32 threads each. 
-A CUDA core executes the same instruction of a warp in a lockstep\footnote{Although the latest Volta architecture supports independent thread scheduling \cite{},
+A CUDA core executes the same instruction of a warp in a lockstep\footnote{Although the latest Volta architecture supports independent thread scheduling \xxx,
 	it is still more efficient to run with the lockstep execution model.}.
 Each warp runs independently but can collaborate through different memory types discussed as the following.  
 
