@@ -49,8 +49,8 @@ We adopt the original implementations of the compared baselines from their corre
 		\hline
 		\textbf{Parameter} & \textbf{Settings} & \textbf{Default} \\ \hline
 		$\alpha$ & 20\%, 25\%, 30\%, 35\%, 40\% & 30\% \\ \hline
-		$\theta$  & 70\%, 75\%, 80\%, 85\%, 90\% & 80\% \\ \hline
-		$r$ & 0.1, 0.2, 0.3, 0.4, 0.5 & 0.3 \\ \hline
+		$\theta$  & 70\%, 75\%, 80\%, 85\%, 90\% & 85\% \\ \hline
+		$r$ & 0.1, 0.2, 0.3, 0.4, 0.5 & 0.2 \\ \hline
 		batch size & 2e5, 4e5, 6e5, 8e5, 10e5 & 10e5 \\ \hline
 	\end{tabular}
 \end{table}
@@ -111,6 +111,20 @@ We adopt the original implementations of the compared baselines from their corre
 	\label{fig:static}
 \end{figure}
 %
+\begin{figure}[t]
+	\begin{minipage}{0.48\linewidth}\centering
+		\includegraphics[width=\linewidth]{pic/static-load_factor/insert.eps}
+		\centerline{\formal{insert}}
+	\end{minipage}
+	\hfill
+	\begin{minipage}{0.48\linewidth}\centering
+		\includegraphics[width=\linewidth]{pic/static-load_factor/search.eps}
+		\centerline{\formal{find}}
+	\end{minipage}
+	\caption{Throughput of different load factor.}
+	\label{fig:static}
+\end{figure}
+
 
 \vspace{1mm}\noindent\textbf{Static Hashing Comparison (Section~\ref{sec:exp:static}).}
 Under the static setting, we evaluate \formal{insert} and \formal{find} performance among all compared approaches. 
@@ -208,76 +222,26 @@ It is also noted that, even though \megakv has great cache utilization due to th
 In summary, under the static environment, \voter achieves competitive efficiency against the compared GPU baselines. Moreover, although \voter does not deliver the best performance over existing approaches, it has very low insertion failure rate and supports more general hash tables.
 
 
-
-\begin{figure*}[htp]
-	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/dynamic/twitter/diff_lower.eps}
-		\centerline{\dstwitter}
-	\end{minipage}
-	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/dynamic/reddit/diff_lower.eps}
-		\centerline{\dsreddit}
-	\end{minipage}
-	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/dynamic/tpch/diff_lower.eps}
-		\centerline{\dstpch}
-	\end{minipage}
-	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/dynamic/ali/diff_lower.eps}
-		\centerline{\dsali}
-	\end{minipage}
-	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/dynamic/random/diff_lower.eps}
-		\centerline{\dsrandom}
-	\end{minipage}
-	\caption{Run time for varying $\alpha$.}
-	\label{fig:vary-alpha-time}
-\end{figure*}
 %
 \begin{figure*}[htp]
 	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/dynamic/twitter/diff_upper.eps}
+		\includegraphics[width=\linewidth]{pic/dynamic/r/dynamic_twitter.eps}
 		\centerline{\dstwitter}
 	\end{minipage}
 	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/dynamic/reddit/diff_upper.eps}
+		\includegraphics[width=\linewidth]{pic/dynamic/r/dynamic_reddit.eps}
 		\centerline{\dsreddit}
 	\end{minipage}
 	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/dynamic/tpch/diff_upper.eps}
+		\includegraphics[width=\linewidth]{pic/dynamic/r/dynamic_tpch.eps}
 		\centerline{\dstpch}
 	\end{minipage}
 	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/dynamic/ali/diff_upper.eps}
+		\includegraphics[width=\linewidth]{pic/dynamic/r/dynamic_ali.eps}
 		\centerline{\dsali}
 	\end{minipage}
 	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/dynamic/random/diff_upper.eps}
-		\centerline{\dsrandom}
-	\end{minipage}
-	\caption{Run time for varying $\beta$.}
-	\label{fig:vary-beta}
-\end{figure*}
-%
-\begin{figure*}[htp]
-	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/dynamic/twitter/diff_r.eps}
-		\centerline{\dstwitter}
-	\end{minipage}
-	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/dynamic/reddit/diff_r.eps}
-		\centerline{\dsreddit}
-	\end{minipage}
-	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/dynamic/tpch/diff_r.eps}
-		\centerline{\dstpch}
-	\end{minipage}
-	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/dynamic/ali/diff_r.eps}
-		\centerline{\dsali}
-	\end{minipage}
-	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/dynamic/random/diff_r.eps}
+		\includegraphics[width=\linewidth]{pic/dynamic/r/dynamic_random.eps}
 		\centerline{\dsrandom}
 	\end{minipage}
 	\caption{Run time for varying $r$.}
@@ -286,109 +250,80 @@ In summary, under the static environment, \voter achieves competitive efficiency
 %
 \begin{figure*}[htp]
 	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/dynamic/twitter/diff_batch_size.eps}
+		\includegraphics[width=\linewidth]{pic/dynamic-load_factor/twitter/batch_LoadFactor-2.eps}
 		\centerline{\dstwitter}
 	\end{minipage}
 	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/dynamic/reddit/diff_batch_size.eps}
+		\includegraphics[width=\linewidth]{pic/dynamic-load_factor/reddit/batch_LoadFactor-2.eps}
 		\centerline{\dsreddit}
 	\end{minipage}
 	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/dynamic/tpch/diff_batch_size.eps}
+		\includegraphics[width=\linewidth]{pic/dynamic-load_factor/tpch/batch_LoadFactor-2.eps}
 		\centerline{\dstpch}
 	\end{minipage}
 	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/dynamic/ali/diff_batch_size.eps}
+		\includegraphics[width=\linewidth]{pic/dynamic-load_factor/ali/batch_LoadFactor-2.eps}
 		\centerline{\dsali}
 	\end{minipage}
 	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/dynamic/random/diff_batch_size.eps}
+		\includegraphics[width=\linewidth]{pic/dynamic-load_factor/random/batch_LoadFactor-2.eps}
 		\centerline{\dsrandom}
 	\end{minipage}
-	\caption{Run time for varying the batch size.}
-	\label{fig:vary-batch-size}
-\end{figure*}
-\begin{figure*}[htp]
-	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/dynamic-stability/dynamic-sta-twitter.eps}
-		\centerline{\dstwitter}
-	\end{minipage}
-	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/dynamic-stability/dynamic-sta-reddit.eps}
-		\centerline{\dsreddit}
-	\end{minipage}
-	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/dynamic-stability/dynamic-sta-tpch.eps}
-		\centerline{\dstpch}
-	\end{minipage}
-	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/dynamic-stability/dynamic-sta-ali.eps}
-		\centerline{\dsali}
-	\end{minipage}
-	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/dynamic-stability/dynamic-sta-random.eps}
-		\centerline{\dsrandom}
-	\end{minipage}
-	\caption{System stability.}
-	\label{fig:vary-alpha-stability}
+	\caption{Load factor for varying batch num.}
+	\label{fig:vary-batch-num}
 \end{figure*}
 
-\begin{figure*}[t!]
+\begin{figure*}[htp]
 	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/static-upper/upper_insert_twitter.eps}
+		\includegraphics[width=\linewidth]{pic/dynamic/lower/dynamic_twitter.eps}
 		\centerline{\dstwitter}
 	\end{minipage}
-	\hfill
 	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/static-upper/upper_insert_reddit.eps}
+		\includegraphics[width=\linewidth]{pic/dynamic/lower/dynamic_reddit.eps}
 		\centerline{\dsreddit}
 	\end{minipage}
-	\hfill
 	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/static-upper/upper_insert_tpch.eps}
+		\includegraphics[width=\linewidth]{pic/dynamic/lower/dynamic_tpch.eps}
 		\centerline{\dstpch}
 	\end{minipage}
-	\hfill
 	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/static-upper/upper_insert_ali.eps}
+		\includegraphics[width=\linewidth]{pic/dynamic/lower/dynamic_ali.eps}
 		\centerline{\dsali}
 	\end{minipage}
-	\hfill
 	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/static-upper/upper_insert_random.eps}
+		\includegraphics[width=\linewidth]{pic/dynamic/lower/dynamic_random.eps}
 		\centerline{\dsrandom}
 	\end{minipage}
-	\caption{Throughputs of insert for varying $\beta$.}
-	\label{fig:static:all:insert}
+	\caption{Run time for varying $\alpha$ .}
+	\label{fig:vary-lower-time}
 \end{figure*}
-\begin{figure*}[t!]
+
+\begin{figure*}[htp]
 	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/static-upper/upper_search_twitter.eps}
+		\includegraphics[width=\linewidth]{pic/dynamic/upper/dynamic_twitter.eps}
 		\centerline{\dstwitter}
 	\end{minipage}
-	\hfill
 	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/static-upper/upper_search_reddit.eps}
+		\includegraphics[width=\linewidth]{pic/dynamic/upper/dynamic_reddit.eps}
 		\centerline{\dsreddit}
 	\end{minipage}
-	\hfill
 	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/static-upper/upper_search_tpch.eps}
+		\includegraphics[width=\linewidth]{pic/dynamic/upper/dynamic_tpch.eps}
 		\centerline{\dstpch}
 	\end{minipage}
-	\hfill
 	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/static-upper/upper_search_ali.eps}
+		\includegraphics[width=\linewidth]{pic/dynamic/upper/dynamic_ali.eps}
 		\centerline{\dsali}
 	\end{minipage}
-	\hfill
 	\begin{minipage}{0.19\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/static-upper/upper_search_random.eps}
+		\includegraphics[width=\linewidth]{pic/dynamic/upper/dynamic_random.eps}
 		\centerline{\dsrandom}
 	\end{minipage}
-	\caption{Throughputs of search for varying $\beta$.}
-	\label{fig:static:all:search}
+	\caption{Run time for varying $\theta$ .}
+	\label{fig:vary-upper-time}
 \end{figure*}
+
+
 
 \subsection{Dynamic Hashing Comparison}\label{sec:exp:dynamic}
 
