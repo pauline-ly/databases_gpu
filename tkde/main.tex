@@ -57,7 +57,8 @@ In this paper, we propose \emph{DyCuckoo}, a novel dynamic cuckoo hash table on 
 We devise an efficient resizing strategy for the dynamic scenario without rehashing the entire table and the strategy ensures a guaranteed filled factor.
 The strategy trades search performance with resizing efficiency and the tradeoff can be configured by the users.
 To further improve efficiency, we further propose a two-layer cuckoo hashing scheme that ensures at most \emph{two} lookups for find and delete opertaions, while still retains similar performance for insertion as that of general cuckoo hash tables. 
-Extensive experiments have validated the effectiveness of the proposed design over several state-of-the-art hash table implementations on GPUs. For bounded filled factor, our hash table design achieves up to \xxx speedups over the compared approaches against dynamic workloads. 
+Extensive experiments have validated the effectiveness of the proposed design over several state-of-the-art hash table implementations on GPUs. 
+Our hash table design achieves superior performance while saves \xxx memory over competitive baselines against dynamic workloads.
 \end{abstract}
 }
 
