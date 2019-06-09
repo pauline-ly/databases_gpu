@@ -124,7 +124,7 @@ Downsizing the hash table $h^i$ is a reverse process of upsizing $h^i$. We note 
 In contrast, downsizing may rehash some KV pairs to other hash tables, especially when $\theta_i > 50\%$.
 Since the KV pairs located in $loc$ and $loc+|h^i|$ are hashed to $loc$ in the new table, there could be cases the KV pairs exceeds the size of a single bucket. 
 Hence, we first assign a warp to accommodate KV pairs that can fit the size of a single bucket. Similar as upsizing, it does require locking since there will be no thread conflict on any bucket. 
-For the remaining KV pairs which cannot fit in the downsized table, called residuals, we insert them into other subtables.
+For the remaining KV pairs which cannot fit in the downsized table, called \emph{residuals}, we insert them into other subtables.
 To make sure no conflict occurs between inserting residuals and processing the downsizing subtable, which are both executed in a single kernel, we exclude the downsizing subtable when inserting the residuals. 
 Take an example when we have three subtables and one of them is being downsized. 
 We only insert the residuals to the remaining two subtables. 

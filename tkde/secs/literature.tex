@@ -25,4 +25,4 @@ It symbolically marks a deleted entry without physically free the memory space.
 Hence, memory spaces are wasted when they were occupied by deleted entries. 
 Third, the chaining approach has a lookup time of $\Omega(log(log(m)))$ for some KVs with high probability. This not only results in degraded performance for \formal{find}, but also triggers more overheads in resolving conflicts when multiple \formal{insert} and \formal{delete} operations occur at the same key.
 In contrast, the cuckoo hashing table adopted in this work guarantees $\Theta(1)$ worst case complexity for \formal{find} and \formal{delete}, 
-$O(1)$ amortized \formal{insert} performance. Moreover, we do not introduce extra complication in implementing customized memory manager but only reply on the default memory allocator provided by CUDA, and, at the same time, ensures fixed filled ratio for the hash tablec.
+$O(1)$ amortized \formal{insert} performance. Moreover, we do not introduce extra complication in implementing customized memory manager but only reply on the default memory allocator provided by CUDA, and, at the same time, ensures fixed filled ratio for the hash table.

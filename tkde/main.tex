@@ -58,7 +58,7 @@ We devise an efficient resizing strategy for the dynamic scenario without rehash
 The strategy trades search performance with resizing efficiency and the tradeoff can be configured by the users.
 To further improve efficiency, we further propose a two-layer cuckoo hashing scheme that ensures at most \emph{two} lookups for find and delete opertaions, while still retains similar performance for insertion as that of general cuckoo hash tables. 
 Extensive experiments have validated the effectiveness of the proposed design over several state-of-the-art hash table implementations on GPUs. 
-Our hash table design achieves superior performance while saves \xxx memory over competitive baselines against dynamic workloads.
+Our hash table design achieves superior performance while saves up to 3x memory over the state-of-the-art approaches against dynamic workloads.
 \end{abstract}
 }
 
