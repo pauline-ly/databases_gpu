@@ -62,7 +62,7 @@ We adopt the original implementations of the compared baselines from their corre
 		Lower Bound $\alpha$ & 20\%, 25\%, 30\%, 35\%, 40\% & 30\% \\ \hline
 		Upper Bound	$\beta$  & 70\%, 75\%, 80\%, 85\%, 90\% & 85\% \\ \hline
 		Ratio $r$ & 0.1, 0.2, 0.3, 0.4, 0.5 & 0.2 \\ \hline
-		Batch Size & 2e5, 4e5, 6e5, 8e5, 10e5 & 10e5 \\ \hline
+		Batch Size & 1.0e5, 1.5e5, 2.0e5, 2.5e5, 3.0e5 & 1.0e5 \\ \hline
 	\end{tabular}
 \end{table}
 
@@ -378,6 +378,32 @@ We have also varied the size of each processing batch. The results are reported 
 	\caption{Run time for varying $\beta$ .}
 	\label{fig:vary-upper-time}
 \end{figure*}
+
+\begin{figure*}[htp]
+	\begin{minipage}{0.19\linewidth}\centering
+		\includegraphics[width=\linewidth]{pic/dynamic/batch/dynamic_twitter.eps}
+		\centerline{\dstwitter}
+	\end{minipage}
+	\begin{minipage}{0.19\linewidth}\centering
+		\includegraphics[width=\linewidth]{pic/dynamic/batch/dynamic_reddit.eps}
+		\centerline{\dsreddit}
+	\end{minipage}
+	\begin{minipage}{0.19\linewidth}\centering
+		\includegraphics[width=\linewidth]{pic/dynamic/batch/dynamic_tpch.eps}
+		\centerline{\dstpch}
+	\end{minipage}
+	\begin{minipage}{0.19\linewidth}\centering
+		\includegraphics[width=\linewidth]{pic/dynamic/batch/dynamic_ali.eps}
+		\centerline{\dsali}
+	\end{minipage}
+	\begin{minipage}{0.19\linewidth}\centering
+		\includegraphics[width=\linewidth]{pic/dynamic/batch/dynamic_random.eps}
+		\centerline{\dsrandom}
+	\end{minipage}
+	\caption{Throughput for varying Batch Size .}
+	\label{fig:vary-upper-time}
+\end{figure*}
+
 
 \vspace{1mm}\noindent\textbf{Varying the filled factor lower bound $\alpha$.}
 We vary the lower bound of the filled factor and report the results in Figure~\ref{fig:vary-lower-time}. 
