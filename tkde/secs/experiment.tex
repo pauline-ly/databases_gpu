@@ -178,7 +178,7 @@ For evaluating downsizing, the setup is a mirror image of the upsizing evaluatio
 The throughputs are reported in Figure~\ref{fig:resize}. 
 The throughput of rehashing for the upsizing scenario is severely limited, since the remaining subtables not being upsized are almost filled and inserting KV pairs resulting frequent evictions.  
 In comparison, the downsizing throughput of rehashing is significantly faster due to a low filled ratio.
-Our resizing strategy achieves compelling speedups over rehashing for downsizing as well. Besides, it only locks the subtable being resized and supports concurrent updates for the remaining subtables. 
+Our resizing strategy achieves dramatic speedups over rehashing for downsizing as well. Besides, it only locks the subtable being resized and supports concurrent updates for the remaining subtables. 
 
 \begin{figure}[t]
 	\begin{minipage}{0.48\linewidth}\centering
@@ -303,8 +303,8 @@ For \slab, the performance of both \formal{insert} and \formal{find} is dramatic
 
 
 \vspace{1mm}\noindent\textbf{Varying insert vs. delete ratio $r$.}
-In Figure~\ref{fig:vary-r-time}, we report the results for varying the ratio $r$: number of deletions over number of insertions in a batch.
-We have an interesting observation that, for a larger $r$, the performance of \voter and \megakv degrades whereas that of \slab improves. As a larger $r$ indicates more deletions, resizing operations are more frequently invoked for \voter and \megakv. In contrast, more deletions leads to additional vacant spaces for \slab as it only symbolically marks a deleted KV pair. Insertions are processed more efficiently for \slab since the inserted KV pairs can overwrite the symbolically deleted ones. Hence, \slab utilizes more GPU device memory than \voter and \megakv. However, symbolic deletions cannot guarantee a bounded filled factor and may lead to arbitrary bad memory efficiency, which will be discussed with more experimental results later in this section.
+In Figure~\ref{fig:vary-r-time}, we report the results for varying the ratio $r$, i.e., number of deletions over number of insertions in a batch.
+We have an interesting observation that, for a larger $r$, the performance of \voter and \megakv degrades whereas that of \slab improves. As a larger $r$ indicates more deletions, resizing operations are more frequently invoked for \voter and \megakv. In contrast, more deletions leads to additional vacant spaces for \slab as it simply symbolically marks a deleted KV pair. Insertions are processed more efficiently for \slab since the inserted KV pairs can overwrite the symbolically deleted ones. Hence, \slab utilizes more GPU device memory than \voter and \megakv. However, symbolic deletions cannot guarantee a bounded filled factor and may lead to arbitrary bad memory efficiency, which will be discussed with more experimental results later in this section.
 \voter shows the best overall performance. Furthermore, the throughput margin between \voter and \megakv grows for a larger $r$. 
 As aforementioned, larger $r$ triggers more resizing operations, where \voter is more efficient than \megakv since \megakv employs a total rehashing approach. 
 
@@ -317,10 +317,10 @@ We evaluate the performance stability of the compared approaches in Figure~\ref{
 In particular, we track the filled factor after processing each batch.
 \slab shows good stability in terms of memory usage for the starting phases. Unfortunately, due to the symbolic deletion approach employed, the memory efficiency of \slab degrades significantly as more deletions are processed. In particular, its filled factor drops to less than $20\%$ after processing less than 100 batches for the \dsali dataset, which deems for a complete rebuild.
 %
-\megakv shows unstable trend since it employs a simple double/half approach for resizing. We can see its filled factor jumps up or down dramatically at the point of resizing. \voter demonstrates the best overall stability and saves up to 4x memory over the compared baselines (the \dsali dataset). 
+\megakv shows unstable trend since it employs a simple double/half approach for resizing. We can see its filled factor jumps up or down dramatically at the points of resizing. \voter demonstrates the best overall stability and saves up to 4x memory over the compared baselines (the \dsali dataset). 
 The results have validated our design where only one of the subtables are subject to resizing. 
 Nevertheless, there is still rooms for improvement. We note that for some datasets, i.e., \dstwitter, \dsreddit, \dstpch and \dsrandom, we observe that the filled factor of \voter drops sharply.
-This is because, even after one time of upsizing, the insertions fail (too many evictions) and it triggers another round of upsizing. We leave it as a future work. 
+This is because, even after one time of upsizing, the insertions fail due to too many evictions and it triggers another round of upsizing. We leave the improvement as a future work. 
 
 
 \vspace{1mm}\noindent\textbf{Varying the batch size.}
@@ -381,8 +381,8 @@ We have also varied the size of each processing batch. The results are reported 
 
 \vspace{1mm}\noindent\textbf{Varying the filled factor lower bound $\alpha$.}
 We vary the lower bound of the filled factor and report the results in Figure~\ref{fig:vary-lower-time}. 
-We only compare \megakv and \voter since \slab is unable to control the filled factor with the symbolic deletion approach. 
-Apparently, the simple resizing strategy adopted by \megakv incurs substantial overhead. Such overhead grows for a higher $\alpha$ since the number of downsizings increases. The performance of \voter is not affected significantly due to the incremental resizing approach by only updating only one stable table at a time. We note that, the performance of \megakv is competitive against \voter for the \dsali dataset. This is because \megakv occupies significant more memory spaces than that of \voter as evidenced in Figure~\ref{fig:track-stability} (up to 4x). Hence, \megakv trades space efficiency with time efficiency.
+We only compare \megakv and \voter since \slab is unable to control the filled factor because of \slab's symbolic deletion approach. 
+Apparently, the simple resizing strategy adopted by \megakv incurs substantial overhead. Such overhead grows for a higher $\alpha$ since the number of downsizings increases. The performance of \voter is not affected significantly due to the incremental resizing approach by updating only one subtable at a time. We note that, the performance of \megakv is competitive against \voter for the \dsali dataset. This is because \megakv occupies significant more memory spaces than that of \voter, as evidenced in Figure~\ref{fig:track-stability} (up to 4x). Hence, \megakv trades space efficiency with time efficiency.
 Nevertheless, \voter remains superior over \megakv in terms of time efficiency while saves GPU memory substantially. 
 
 
