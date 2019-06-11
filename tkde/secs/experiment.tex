@@ -379,6 +379,32 @@ We have also varied the size of each processing batch. The results are reported 
 	\label{fig:vary-upper-time}
 \end{figure*}
 
+\begin{figure*}[htp]
+	\begin{minipage}{0.19\linewidth}\centering
+		\includegraphics[width=\linewidth]{pic/dynamic/batch/dynamic_twitter.eps}
+		\centerline{\dstwitter}
+	\end{minipage}
+	\begin{minipage}{0.19\linewidth}\centering
+		\includegraphics[width=\linewidth]{pic/dynamic/batch/dynamic_reddit.eps}
+		\centerline{\dsreddit}
+	\end{minipage}
+	\begin{minipage}{0.19\linewidth}\centering
+		\includegraphics[width=\linewidth]{pic/dynamic/batch/dynamic_tpch.eps}
+		\centerline{\dstpch}
+	\end{minipage}
+	\begin{minipage}{0.19\linewidth}\centering
+		\includegraphics[width=\linewidth]{pic/dynamic/batch/dynamic_ali.eps}
+		\centerline{\dsali}
+	\end{minipage}
+	\begin{minipage}{0.19\linewidth}\centering
+		\includegraphics[width=\linewidth]{pic/dynamic/batch/dynamic_random.eps}
+		\centerline{\dsrandom}
+	\end{minipage}
+	\caption{Throughput for varying Batch Size .}
+	\label{fig:vary-upper-time}
+\end{figure*}
+
+
 \vspace{1mm}\noindent\textbf{Varying the filled factor lower bound $\alpha$.}
 We vary the lower bound of the filled factor and report the results in Figure~\ref{fig:vary-lower-time}. 
 We only compare \megakv and \voter since \slab is unable to control the filled factor because of \slab's symbolic deletion approach. 
