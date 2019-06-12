@@ -50,15 +50,15 @@
 
 \IEEEtitleabstractindextext{%
 \begin{abstract}
-Hash table, one of the most fundamental data structure,
-have been implemented on Graphics Processing Units (GPUs) to accelerate a wide range of data analytics workloads. Most of the existing works focus on the static scenario and try to occupy large GPU device memory for maximizing the insertion efficiency. In many cases, the data stored in the hash table gets updated dynamically and existing approaches takes unnecessarily large memory resources.
+Hash table, one of the most fundamental data structures,
+have been implemented on Graphics Processing Units (GPUs) to accelerate a wide range of data analytics workloads. Most existing works focus on the static scenario and try to occupy large GPU memory for maximizing the insertion efficiency. In many cases, the data stored in the hash table gets updated dynamically and existing approaches take unnecessarily large memory resources.
 One na\"ive solution is to rebuild a hash table (a.k.a rehashing) whenever it is either filled or mostly empty. However, this approach renders significant overheads for rehashing.
 In this paper, we propose \emph{DyCuckoo}, a novel dynamic cuckoo hash table on GPUs. 
 We devise an efficient resizing strategy for the dynamic scenario without rehashing the entire table and the strategy ensures a guaranteed filled factor.
 The strategy trades search performance with resizing efficiency and the tradeoff can be configured by the users.
-To further improve efficiency, we further propose a two-layer cuckoo hashing scheme that ensures at most \emph{two} lookups for find and delete opertaions, while still retains similar performance for insertion as that of general cuckoo hash tables. 
+To further improve efficiency, we further propose a two-layer cuckoo hashing scheme that ensures at most \emph{two} lookups for find and delete operations, while still retains similar performance for insertion as that of general cuckoo hash tables. 
 Extensive experiments have validated the effectiveness of the proposed design over several state-of-the-art hash table implementations on GPUs. 
-Our hash table design achieves superior performance while saves up to 4x memory over the state-of-the-art approaches against dynamic workloads.
+\emph{DyCuckoo} achieves superior performance while saves up to 4x memory over the state-of-the-art approaches against dynamic workloads.
 \end{abstract}
 }
 
@@ -93,7 +93,7 @@ Our hash table design achieves superior performance while saves up to 4x memory 
 \vspace*{-2\baselineskip}
 
 \begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{photos/zhangjing.pdf}}]
-	{Jing Zhang} is currently a graduate student at the College of Computer Science and Technology, Zhejiang University (ZJU). He received his B.Eng. from Huazhong University of Science and Technology (HUST) in 2017. His research interests include heterogeneous computing and data management.
+	{Jing Zhang} is currently a graduate student at the College of Computer Science and Technology, Zhejiang University (ZJU). He received his B.Sc. from Huazhong University of Science and Technology (HUST) in 2017. His research interests include heterogeneous computing and data management.
 \end{IEEEbiography}
 \vspace*{-2\baselineskip}
 
@@ -103,7 +103,7 @@ Our hash table design achieves superior performance while saves up to 4x memory 
 \vspace*{-2\baselineskip}
 
 \begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{photos/lvzheng.pdf}}]
-	{Lv Zheng} is now a staff engineer at Alibaba group, and responsible for development of GPU databases. He received his PhD in communication and information system from Shanghai institute of microsystem and information technology, Chinese Academy of Sciences in 2012. He mainly works in the area of high performance computing and his major research interest is heterogeneous computing in database system.
+	{Zheng Lyu} is now a staff engineer at Alibaba group, and responsible for development of GPU databases. He received his PhD in communication and information system from Shanghai institute of microsystem and information technology, Chinese Academy of Sciences in 2012. He mainly works in the area of high performance computing and his major research interest is heterogeneous computing in database system.
 \end{IEEEbiography}
 \vspace*{-2\baselineskip}
 

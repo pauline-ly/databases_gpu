@@ -1,7 +1,7 @@
 \section{experimental evaluation}\label{sec:exp}
 In this section, we conduct extensive experiments by comparing the proposed hash table design \voter with several state-of-the-art approaches for GPU-based hash tables. 
 Section~\ref{sec:exp:setup} introduces the experimental setup. 
-Section~\ref{sec:exp:tune} presents the discssions on the sensitivity analysis of \voter.
+Section~\ref{sec:exp:tune} presents the discussion on the sensitivity analysis of \voter.
 In Sections~\ref{sec:exp:static} and \ref{sec:exp:dynamic}, we compare all approaches under the static and the dynamic experiments respectively.
 
 \subsection{Experiment Setup}\label{sec:exp:setup}
@@ -131,7 +131,7 @@ $r$ is the ratio of insertions over deletions in a processing batch.
 The settings of the aforementioned parameters could be found in Table~\ref{tbl:parameters}. For all experiments, we use \emph{million operations/seconds} (Mops) to measure the performance of all compared approaches.
 
 \vspace{1mm}\noindent\textbf{Experiment Environment.}
-We conduct all experiments on an Intel Xeon E5-2620 Server equipped with NVIDIA GeForce GTX 1080.The GTX 1080 is built on Pascal architecture with 20 SMs and 128 SPs per SM. The GTX 1080 has 8 GB of GDDR5 memory. Evaluations are performed using CUDA 8.0 on Ubuntu 16.04.3. The optimization level (-O3) is applied for compiling all programs.
+We conduct all experiments on an Intel Xeon E5-2620 Server equipped with NVIDIA GeForce GTX 1080.The GTX 1080 is built on Pascal architecture with 20 SMs and 128 SPs per SM. The GTX 1080 has 8 GB of GDDR5 memory. Evaluations are performed using CUDA 9.1 on Ubuntu 16.04.3. The optimization level (-O3) is applied for compiling all programs.
 
 
 
@@ -204,7 +204,7 @@ Our resizing strategy achieves dramatic speedups over rehashing for downsizing a
 		\includegraphics[width=\linewidth]{pic/static-load_factor/search.eps}
 		\centerline{\formal{find}}
 	\end{minipage}
-	\caption{Throughput of all compared approaches for varying the filled factor against the \dsali dataset.}
+	\caption{Throughput of all compared approaches for varying the filled factor against the \dsrandom dataset.}
 	\label{fig:static-filled-factor}
 \end{figure}
 
@@ -229,7 +229,7 @@ Our resizing strategy achieves dramatic speedups over rehashing for downsizing a
 		\includegraphics[width=\linewidth]{pic/dynamic/r/dynamic_random.eps}
 		\centerline{\dsrandom}
 	\end{minipage}
-	\caption{Run time for varying $r$.}
+	\caption{Throughput for varying the ratio $r$.}
 	\label{fig:vary-r-time}
 \end{figure*}
 %
@@ -344,7 +344,7 @@ For \slab, the performance of both \formal{insert} and \formal{find} is dramatic
 		\includegraphics[width=\linewidth]{pic/dynamic/lower/dynamic_random.eps}
 		\centerline{\dsrandom}
 	\end{minipage}
-	\caption{Run time for varying $\alpha$ .}
+	\caption{Throughput for varying $\alpha$ .}
 	\label{fig:vary-lower-time}
 \end{figure*}
 
@@ -369,7 +369,7 @@ For \slab, the performance of both \formal{insert} and \formal{find} is dramatic
 		\includegraphics[width=\linewidth]{pic/dynamic/upper/dynamic_random.eps}
 		\centerline{\dsrandom}
 	\end{minipage}
-	\caption{Run time for varying $\beta$ .}
+	\caption{Throughput for varying $\beta$ .}
 	\label{fig:vary-upper-time}
 \end{figure*}
 

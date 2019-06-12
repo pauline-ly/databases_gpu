@@ -159,7 +159,7 @@ In summary, each iteration of the loop presented in Algorithm~\ref{algo:insert} 
 
 We give the following example to demonstrate the parallel insertion process.
 \begin{example}
-	In Figure~\ref{fig:voter}, we visualize the scenario for three threads: $l_x$, $l_y$, $l_z$ from warp $a$ and warp $b$, inserting KV pairs $(k_1,v_1)$,$(k_{33},v_{33})$,$(k_{65},v_{65})$ independently. 
+	In Figure~\ref{fig:voter}, we visualize the scenario for three threads: $l_x$, $l_y$, $l_z$ from warp $a$ and warp $b$, inserting KV pairs $(k_1,v_1)$, $(k_{33},v_{33})$, $(k_{65},v_{65})$ independently. 
 	Suppose $l_y$ and $l_z$ become the leaders of warp $a$ and $b$ respectively. Both threads will compete for the bucket $y$ and $l_z$ wins the battle. 
 	$l_z$ will then leads warp $b$ to inspect the bucket and evict $(k_{64},v_{64})$ by replacing with $(k_{65},v_{65})$. 
 	In the meanwhile, $l_y$ does not lock on bucket $y$ and joins the new leader $l_x$ voted in warp $a$. 
@@ -197,7 +197,7 @@ It has been pointed out that analyzing the theoretical upper bound complexity of
 Nevertheless, empirical results have shown that increasing the number of tables leads to better insertion performance. Please refer to our experimental results presented in Section~\ref{sec:exp}.
 %Thus, we assume the complexity for inserting to $d$ hash tables is the same as that of $2$ has tables, as long as $d$ keeps constant.  
 
-We then analyze the number of possible thread conflicts. Assuming we launch $m$ threads in parallel, each of them is assigned to an unique key, and the total number of unique buckets is $H=\sum_{i=1}^d|h^i|$. For \formal{find} and \formal{delete}, there is no conflict at all. 
+We then analyze the number of possible thread conflicts. Assuming we launch $m$ threads in parallel, each of them is assigned to a unique key, and the total number of unique buckets are $H=\sum_{i=1}^d|h^i|$. For \formal{find} and \formal{delete}, there is no conflict at all. 
 For \formal{insert}, computing the expected number of conflicting buckets resembles the \emph{balls and bins} problem \cite{raab1998balls}, which is $O(\binom{m}{2}/H)$. 
 Given GPUs have a large number of threads, there could be a significant amount of conflicts. Thus, we propose the voter coordination scheme to reduce the cost of spinning on locks. 
 %Note that the analysis is done for the cases where the key to update is unique. More conflicts could occur in reality when the same key is updated in parallel. 
