@@ -1,0 +1,38 @@
+\section*{To Reviewer \#2}
+
+\begin{shaded}
+	\noindent\textbf{C1:} While the authors argue that dynamic hash tables are critical for many data analytics applications, they don't quantify how often their dynamic features are required in practice. For example, databases employ sophisticated sampling techniques to estimate the required hash table size in order to avoid resizing. 
+\end{shaded}
+%
+\noindent\textbf{Response:} 
+
+\begin{shaded}
+	\noindent\textbf{C2:} The performance of hash table operation is not bound by hash computation, but random memory access \cite{GPU-Join-A}. The authors claim that minimizing random lookups is especially critical for GPU architectures. However, this is true for all architectures handling GB size hash tables, irrespective of caches. TLBs can become the gating for very large Hash tables, c.f. appending in \cite{kaldewey2012gpu}. As an aside, GPUs offer a 10x higher random memory bandwidth, than CPUs \cite{GPU-Join-B}.
+\end{shaded}
+%
+\noindent\textbf{Response:} 
+
+\begin{shaded}
+	\noindent\textbf{C3:} Although current server grade GPUs are available from cloud providers the authors conduct their performance evaluation on 3-year old gaming GPUs from 2 generations ago. This makes it difficult to compare with other published results. Thus, re-running experiments on current hardware is advised.
+\end{shaded}
+%
+\noindent\textbf{Response:} 
+
+\begin{shaded}
+	\noindent\textbf{C4:} The authors cite \cite{ashkiani2018dynamic} as the only other dynamic hash table approach. Surprisingly, the referred publication achieves better performance on GPU hardware from 4 generations ago, then the results presented in this paper on hardware from 2 generation ago, i.e., 400-700M ops for building and 600M-2B ops for querying hash tables.
+\end{shaded}
+%
+\noindent\textbf{Response:} 
+
+\begin{shaded}
+	\noindent\textbf{C5:} The comparison with static hash tables is missing recent advances in accelerated, GPU hash table. E.g. \cite{junger2018warpdrive} achieves 1.3B ops for building on the same generation (server) hardware. A comparison with stadium hashing \cite{khorasani2015stadium} which claims to be up 2-3x faster than Cuckoo is missing as well. Including those would more adequately present the tradeoffs between static and dynamic hashing.
+\end{shaded}
+%
+\noindent\textbf{Response:} 
+
+
+\begin{shaded}
+	\noindent\textbf{C6:} The paper lacks an explanation why resizing their hash table can be done at 10x the throughput of insertion. The authors should revisit how their throughput calculation is done, e.g., only consider the hash table entries accessed.
+\end{shaded}
+%
+\noindent\textbf{Response:} 

@@ -1,0 +1,38 @@
+\section*{To Reviewer \#1}
+
+\begin{shaded}
+	\noindent\textbf{C1:} Basically, a GPU is a SIMD architecture that is suitable for applications that a large number of threads perform the same instructions for different data. My first question is what is the purpose of implementing a dynamic hash table on GPUs instead of CPUs. Compared to static hash tables, dynamic hash tables require insert and delete operations in addition to lookup operations. These two operations should produce more diverse operations on GPU threads that are detrimental to performance.
+\end{shaded}
+%
+\noindent\textbf{Response:} 
+
+\begin{shaded}
+	\noindent\textbf{C2:} My second question is how to solve the critical section problem that when two or more threads want to insert a KV pair into the same location. The authors mentioned that for insert operation, there are a lot of conflicts and they proposed a voter coordination scheme to reduce the cost of spinning of locks. The authors should explain the implementation of voter coordination scheme on GPU in detail. For example, how do you assign an insert operation to a thread instead of using a warp to handle the operation? In my opinion, it is possible to assign an insert operation to a thread by allocating a block containing only one thread. Therefore, if multiple insert operations are required, a large number of such blocks must be allocated. First, allocating blocks that contain only one thread is not efficient. Second, how to implement the lock on GPUs? We know that the communication between different blocks can only be done with global memory. Furthermore, how to deal with the synchronization of these threads on different blocks? 
+\end{shaded}
+
+\noindent\textbf{Response:} 
+
+\begin{shaded}
+	\noindent\textbf{C2:} My second question is how to solve the critical section problem that when two or more threads want to insert a KV pair into the same location. The authors mentioned that for insert operation, there are a lot of conflicts and they proposed a voter coordination scheme to reduce the cost of spinning of locks. The authors should explain the implementation of voter coordination scheme on GPU in detail. For example, how do you assign an insert operation to a thread instead of using a warp to handle the operation? In my opinion, it is possible to assign an insert operation to a thread by allocating a block containing only one thread. Therefore, if multiple insert operations are required, a large number of such blocks must be allocated. First, allocating blocks that contain only one thread is not efficient. Second, how to implement the lock on GPUs? We know that the communication between different blocks can only be done with global memory. Furthermore, how to deal with the synchronization of these threads on different blocks? 
+\end{shaded}
+
+\noindent\textbf{Response:} 
+
+\begin{shaded}
+	\noindent\textbf{C3:} In the experimental results, Figure 7 shows that the throughput of insert operation is about 400Mbps while the throughput of find operation is about 600Mbps. My question is whether the result of this experiment is calculated from the GPU or the CPU. In other words, do authors consider the overhead of data movement from CPU to GPU and GPU to CPU? And, author should compare and report the throughputs of insert and delete operations on GPU and CPU.
+\end{shaded}
+
+\noindent\textbf{Response:} 
+
+\begin{shaded}
+	\noindent\textbf{C4:} In Table 2, what is the meaning of unique keys? Does the difference between KV pairs and unique keys have any impact on the performance of the insert, delete, and find operations? In addition, what is the memory size of the hash table that stores these five data sets?
+\end{shaded}
+
+\noindent\textbf{Response:} 
+
+
+\begin{shaded}
+	\noindent\textbf{C5:} In Table 2, what is the meaning of unique keys? Does the difference between KV pairs and unique keys have any impact on the performance of the insert, delete, and find operations? In addition, what is the memory size of the hash table that stores these five data sets?
+\end{shaded}
+
+\noindent\textbf{Response:} 
