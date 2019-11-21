@@ -1,0 +1,66 @@
+\documentclass[11pt]{article}
+\usepackage{listings}
+\usepackage{framed}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{geometry}
+\geometry{a4paper,top=10mm,left=20mm,right=20mm,bottom=20mm}
+\colorlet{shadecolor}{gray!20}
+
+\lstnewenvironment{mat}
+{\lstset{language=mathematica,mathescape,columns=flexible}}
+{}
+
+\usepackage{graphicx}
+\usepackage{balance}  % for  \balance command ON LAST PAGE  (only there!)
+\usepackage{pslatex,amsmath,epsfig}
+\usepackage{amssymb}
+\usepackage{xspace}
+\usepackage{multirow}
+\usepackage{upquote}
+\usepackage{url}
+\usepackage{xcolor}
+\usepackage{epstopdf}
+
+%\usepackage{apalike}
+
+\usepackage{enumerate}
+\usepackage{subfigure}
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage[T1]{fontenc}
+\usepackage{algorithm}
+\usepackage{xcolor, soul}
+\sethlcolor{blue}
+
+\newcommand{\eat}[1]{}
+\newcommand{\reminder}[1]{ [[[ \marginpar{\mbox{$<==$}} #1 ]]] }
+\newtheorem{definition}{Definition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{proposition}{Proposition}
+\newtheorem{example}{Example}
+\newtheorem{observation}{Observation}
+\begin{document}
+
+\title{Revision Summary}
+\date{}
+\maketitle
+
+
+\noindent We sincerely appreciate the chance of revision and deeply appreciate the insightful comments and suggestions from the reviewers to help us improve the quality of the work. In this report, we provide detailed responses to all the concerns listed by the reviewers.
+
+\input{reviewer-1}
+\input{reviewer-2}
+\input{reviewer-3}
+
+
+
+%\bibliographystyle{apalike}
+\bibliographystyle{abbrv}
+\bibliography{ref}
+
+
+
+
+
+\end{document}

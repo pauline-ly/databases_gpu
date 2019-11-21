@@ -1,0 +1,40 @@
+\section*{To Reviewer \#3}
+
+\begin{shaded}
+	\noindent\textbf{C1:} Some English mistakes.  If the authors have a native English speaking colleague, I would ask them for edits or run it by a professional editor.  I could follow the text, but there were some sentences that required me to stop and reread.  Again, nothing major, but it will help improve readability in a couple of places.
+\end{shaded}
+%
+\noindent\textbf{Response:} 
+
+\begin{shaded}
+	\noindent\textbf{C2:} Some additional experiments would be nice.
+	(a) Impact of table size on performance.  Does the proposed technique only work for specific table sizes?  It would be good to see a plot that varies the table size and shows how throughput changes across the different hash table implementations for the different datasets.
+	(b) It would be nice to have a plot showing the memory use of the different hash table implementations relative to one another.  The number 4x is given but without much further explanation or detail.
+\end{shaded}
+%
+\noindent\textbf{Response:} 
+
+\begin{shaded}
+	\noindent\textbf{C3:} The proposed design applies updates at the granularity of batches.  While not inherently a problem, it means that fine-grain updates that have a required order need to be placed in different batches when using the current algorithms.
+\end{shaded}
+%
+\noindent\textbf{Response:} 
+
+\begin{shaded}
+	\noindent\textbf{C4:} Some missing citations. 	
+\end{shaded}
+%
+\noindent\textbf{Response:} 
+Need to review the following works: 
+\begin{itemize}
+	\item The resizing approach shares similarities with the quotienting used in quotient filters see Bender et al. in VLDB'12 \cite{bender2012don}.  
+	\item The hash-based partitioning with multiple hash tables is used in the radix-hash join \cite{bender2012don} and in some high-performance group-and-aggregate algorithms.  
+	\item The hierarchical approach also shares some similarities with recent work like the following although not exactly identical \cite{zuo2018write}
+	\item See \cite{zhang2019data} for discussion on tradeoffs in data partitioning, a trait of this paper.
+\end{itemize}
+
+\begin{shaded}
+	\noindent\textbf{C5:} Source code is not open-sourced.  I didn't see any mention of the source code being open-sourced.  Open sourcing the code would add to the potential impact of the work and aid in reproducibility.
+\end{shaded}
+%
+\noindent\textbf{Response:} 
