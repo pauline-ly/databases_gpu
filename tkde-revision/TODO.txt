@@ -1,0 +1,6 @@
+总结一些GPU Hash那边要加的实验:
+1. Figure 8. 除了目前对比throughput的办法，对比一下number of buckets accessed.
+2. Figure 9. 加跟WarpDrive和libcukoo的对比
+3. Figure 10. 加跟WarpDrive对比，另外除了RAND dataset，其他数据集也跑一下。
+4. 加一个在default setting每个GPU方法在每个数据集下面用的memory size
+5. All experiments on new GPU.

@@ -5,6 +5,7 @@
 \end{shaded}
 %
 \noindent\textbf{Response:} 
+We have carefully revised the manuscript and corrected the language issues as much as possible. \reminder{Review by native speakers.}
 
 \begin{shaded}
 	\noindent\textbf{C2:} Some additional experiments would be nice.
@@ -13,28 +14,36 @@
 \end{shaded}
 %
 \noindent\textbf{Response:} 
+Our proposed approach works for tables with any size. In Figure~\reminder{TODO}, we demonstrate the performance by fixing the data size and varying the filled factor. Hence, a larger filled factor infers less memory is used. Due to space limit, we only present the result for the {\tt RAND} dataset.
+In the revision, we add the results for all datasets in an extended version as well as the supplementary material. The additional results include the performance of all methods when varying the filled factor as well as the memory usage for each implementation for the default filled factor. 
 
 \begin{shaded}
 	\noindent\textbf{C3:} The proposed design applies updates at the granularity of batches.  While not inherently a problem, it means that fine-grain updates that have a required order need to be placed in different batches when using the current algorithms.
 \end{shaded}
 %
 \noindent\textbf{Response:} 
+We thank the reviewer for pointing out the issue. As GPUs are inherently built on a throughput-oriented architecture, small batches will lead to degraded performance. 
+If the order of updates have to be enforced, CPUs are better choices for the scenario. 
+We discuss the limitation of our approach in \reminder{TODO}.
 
 \begin{shaded}
-	\noindent\textbf{C4:} Some missing citations. 	
+	\noindent\textbf{C4:} Some missing citations.
+	\begin{itemize}[noitemsep]
+		\item The resizing approach shares similarities with the quotienting used in quotient filters see Bender et al. in VLDB'12 \cite{bender2012don}.  
+		\item The hash-based partitioning with multiple hash tables is used in the radix-hash join \cite{boncz1999database} and in some high-performance group-and-aggregate algorithms.  
+		\item The hierarchical approach also shares some similarities with recent work like the following although not exactly identical \cite{zuo2018write}
+		\item See \cite{zhang2019data} for discussion on tradeoffs in data partitioning, a trait of this paper.
+	\end{itemize} 	
 \end{shaded}
 %
 \noindent\textbf{Response:} 
-Need to review the following works: 
-\begin{itemize}
-	\item The resizing approach shares similarities with the quotienting used in quotient filters see Bender et al. in VLDB'12 \cite{bender2012don}.  
-	\item The hash-based partitioning with multiple hash tables is used in the radix-hash join \cite{bender2012don} and in some high-performance group-and-aggregate algorithms.  
-	\item The hierarchical approach also shares some similarities with recent work like the following although not exactly identical \cite{zuo2018write}
-	\item See \cite{zhang2019data} for discussion on tradeoffs in data partitioning, a trait of this paper.
-\end{itemize}
+We thank the reviewer for pointing out these related works. We add these references as well as some discussions in the revision. 
 
 \begin{shaded}
-	\noindent\textbf{C5:} Source code is not open-sourced.  I didn't see any mention of the source code being open-sourced.  Open sourcing the code would add to the potential impact of the work and aid in reproducibility.
+	\noindent\textbf{C5:} 
+	The references for the different datasets would be good for result reproducibility.
+	Source code is not open-sourced.  I didn't see any mention of the source code being open-sourced.  Open sourcing the code would add to the potential impact of the work and aid in reproducibility.
 \end{shaded}
 %
 \noindent\textbf{Response:} 
+In the revised submission, we add the references for all datasets used in this paper except the {\tt COM} dataset due to confidentiality. The codes are available in \reminder{TODO}.

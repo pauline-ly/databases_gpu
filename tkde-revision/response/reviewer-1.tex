@@ -5,34 +5,40 @@
 \end{shaded}
 %
 \noindent\textbf{Response:} 
+We agree with the reviewer that insertion and deletion operations in dynamic hash tables bring more 
+challenges in performance optimization. Nevertheless, due to the high memory bandwidth and massive parallelism of GPUs, hash table implemented on GPUs still show significant insertion and deletion throughput speedups over the counterparts implemented on CPUs. For instance, the insertion throughput of a well-established CPU-based concurrent hash table \cite{li2014algorithmic} is only below 50 Million Operations Per Second (Mops), whereas the throughput of insertion on GPUs can be 1000 Mops in our new experiments. This shows the potential of GPU-based dynamic hash table, even with complicated update operations. We add experimental study on CPU-based dynamic hash table to validate our claim. Please see Section~\reminder{TODO} for more details. 
 
 \begin{shaded}
 	\noindent\textbf{C2:} My second question is how to solve the critical section problem that when two or more threads want to insert a KV pair into the same location. The authors mentioned that for insert operation, there are a lot of conflicts and they proposed a voter coordination scheme to reduce the cost of spinning of locks. The authors should explain the implementation of voter coordination scheme on GPU in detail. For example, how do you assign an insert operation to a thread instead of using a warp to handle the operation? In my opinion, it is possible to assign an insert operation to a thread by allocating a block containing only one thread. Therefore, if multiple insert operations are required, a large number of such blocks must be allocated. First, allocating blocks that contain only one thread is not efficient. Second, how to implement the lock on GPUs? We know that the communication between different blocks can only be done with global memory. Furthermore, how to deal with the synchronization of these threads on different blocks? 
 \end{shaded}
 
-\noindent\textbf{Response:} 
+\noindent\textbf{Response:} We are sorry for the unclear presentation in our original manuscript. We have added more implementation details in Section~\reminder{TODO} of the revised submission. 
 
-\begin{shaded}
-	\noindent\textbf{C2:} My second question is how to solve the critical section problem that when two or more threads want to insert a KV pair into the same location. The authors mentioned that for insert operation, there are a lot of conflicts and they proposed a voter coordination scheme to reduce the cost of spinning of locks. The authors should explain the implementation of voter coordination scheme on GPU in detail. For example, how do you assign an insert operation to a thread instead of using a warp to handle the operation? In my opinion, it is possible to assign an insert operation to a thread by allocating a block containing only one thread. Therefore, if multiple insert operations are required, a large number of such blocks must be allocated. First, allocating blocks that contain only one thread is not efficient. Second, how to implement the lock on GPUs? We know that the communication between different blocks can only be done with global memory. Furthermore, how to deal with the synchronization of these threads on different blocks? 
-\end{shaded}
-
-\noindent\textbf{Response:} 
+We give a brief response here. Each thread is indeed assigned to one KV insertion but a block contains multiple threads. All 32 threads in a warp first vote for a leader through the ``ballot'' function.
+The leader thread then tries lock the bucket where it wants to insert the assigned KV pair. The lock is implemented with the ``atomicCAS'' function. If the leader successfully acquires the lock, all threads in the same warp help the leader to inspect all elements in the bucket and perform insertion . If the lock is unsuccessful, all threads re-vote for another leader, which then tries to lock another bucket. In this way, we reduce the cost of spinning on locks. Threads successfully insert their KV pairs will not participate in the voting but will always help the leader for insertion. 
+ 
 
 \begin{shaded}
 	\noindent\textbf{C3:} In the experimental results, Figure 7 shows that the throughput of insert operation is about 400Mbps while the throughput of find operation is about 600Mbps. My question is whether the result of this experiment is calculated from the GPU or the CPU. In other words, do authors consider the overhead of data movement from CPU to GPU and GPU to CPU? And, author should compare and report the throughputs of insert and delete operations on GPU and CPU.
 \end{shaded}
 
 \noindent\textbf{Response:} 
+In this paper, we do not consider the cost of data transfer between CPU and GPUs. All performance numbers are calculated purely based on the run-time on GPUs. 
+The overhead of data transfer can be hidden by overlapping the data transfer and GPU computation, as proposed in MegaKV \cite{zhang2015mega}. Since this technique is orthogonal to the approaches proposed in our paper, we thus focus on GPU computation only. We add clarifications in Section~\reminder{TODO} for discussing the data transfer issue.
+
+We add experimental comparison between a CPU-based concurrent hash table \reminder{CITE} and the GPU-based hash tables. The results have demonstrated that GPU-based approaches show significant performance advantages.  
 
 \begin{shaded}
 	\noindent\textbf{C4:} In Table 2, what is the meaning of unique keys? Does the difference between KV pairs and unique keys have any impact on the performance of the insert, delete, and find operations? In addition, what is the memory size of the hash table that stores these five data sets?
 \end{shaded}
 
 \noindent\textbf{Response:} 
-
+The number of unique keys give the information on how many ``real'' insertions are performed. In other words, if a key exists in the hash table, inserting a KV pair with the same key will simply update the value and no cuckoo eviction will occur. Hence, a high ratio of unique keys over all KV pairs lead to better performance. For example, the insertion throughput is the highest for the {\tt COM} dataset as the portion of unique keys is the lowest across all datasets. We add the aforementioned discussion in Section~\reminder{TODO}.
 
 \begin{shaded}
 	\noindent\textbf{C5:} The authors mention that increasing the number of tables leads to better insertion performance. However, Figure 7 shows that when the number of tables is greater than 4, the performance of the insertion operation is degraded. Do author have comments on this results?
 \end{shaded}
 
-\noindent\textbf{Response:} 
+\noindent\textbf{Response:} We thank the reviewer for pointing out this issue, which was overlooked in the original submission. The performance slightly degrades with more tables beyond 4. We give the reason as the following. In our experiment, the total allocated memory is fixed for each dataset. 
+Hence, with more tables, the size of each table becomes smaller. Furthermore, given $d$ tables, all keys are first hashed into $\binom{d}{2}$ partitions and one key can only appear in two tables. 
+With more tables, we have more partitions but the memory allocated for each partition becomes smaller. This leads to more evictions for some overly occupied partitions and degrades the performance slightly. 

@@ -5,34 +5,68 @@
 \end{shaded}
 %
 \noindent\textbf{Response:} 
+We are sorry that the original submission did not clarify the motivation for dynamic hash table. 
+Dynamically-sized hash tables have been studied across the academia \cite{liu2014dynamic,ashkiani2018dynamic} and the industry \cite{larson2003scaleable,douceur2000hash}. 
+One important application scenario for dynamic hash table is data stream processing, e.g., sensor data processing, Internet traffic analysis and analysis of various transaction logic such as web server logs and telephone calls. 
+More specifically, dynamic hash tables can be used to process sliding window join on data stream \cite{golab2003processing}. We strengthen our motivation in the introduction for this revision.
+
+We thank the reviewer for pointing out the potential use of sampling techniques to estimate the table size required in advance. In a data stream application as aforementioned, it could be hard to estimate the hash table size in advance. Nevertheless, there exists a large body of research on time-series prediction and it is a very interesting direction to explore. We leave it as a future work since time-series prediction is orthogonal to the resizing approach proposed in our work. 
+
+
 
 \begin{shaded}
 	\noindent\textbf{C2:} The performance of hash table operation is not bound by hash computation, but random memory access \cite{GPU-Join-A}. The authors claim that minimizing random lookups is especially critical for GPU architectures. However, this is true for all architectures handling GB size hash tables, irrespective of caches. TLBs can become the gating for very large Hash tables, c.f. appending in \cite{kaldewey2012gpu}. As an aside, GPUs offer a 10x higher random memory bandwidth, than CPUs \cite{GPU-Join-B}.
 \end{shaded}
 %
 \noindent\textbf{Response:} 
+Thanks for identifying the issue and bringing us some insights. 
+We have removed the problematic statement saying ``random accesses are particularly expensive as GPUs contain limited cache size and simplified control units compared with those of CPUs''.
 
 \begin{shaded}
 	\noindent\textbf{C3:} Although current server grade GPUs are available from cloud providers the authors conduct their performance evaluation on 3-year old gaming GPUs from 2 generations ago. This makes it difficult to compare with other published results. Thus, re-running experiments on current hardware is advised.
 \end{shaded}
 %
 \noindent\textbf{Response:} 
+We have re-ran all experiments on a new machine with Nvidia P100 GPU \reminder{CHECK}. Please see the updated experimental results in Section~\reminder{TODO}.
 
 \begin{shaded}
 	\noindent\textbf{C4:} The authors cite \cite{ashkiani2018dynamic} as the only other dynamic hash table approach. Surprisingly, the referred publication achieves better performance on GPU hardware from 4 generations ago, then the results presented in this paper on hardware from 2 generation ago, i.e., 400-700M ops for building and 600M-2B ops for querying hash tables.
 \end{shaded}
 %
 \noindent\textbf{Response:} 
+We have to clarify two things: 
+\begin{itemize}[noitemsep]
+	\item Although the GPU device used in SlabHash \cite{ashkiani2018dynamic} (Tesla K40c\footnote{https://www.techpowerup.com/gpu-specs/tesla-k40c.c2505}) is 4 generations older than the device used in our original submission (GTX 1080\footnote{https://www.techpowerup.com/gpu-specs/geforce-gtx-1080.c2839}), they share the similar specs as K40 was a top-end GPU when it was launched. 
+	\item We suspect the reviewer is referred to Figure 5 in \cite{ashkiani2018dynamic} where the performance of CUDPP is 400-700 Mops (Build) and 600 Mops-2 Bops (Search). The performance of the dynamic hash table SlabHash is inferior than CUDPP at 300 Mops-500 Mops (Build) and 800 Mops - 900 Mops. Furthermore, we want to highlight that this performance is measured at a fixed filled factor of 60\%. In our experiments, we vary the filled factor from 65\%-90\% with the default set to 85\%. Due to different memory utilization, the performance results observed are different.
+\end{itemize}
+%
+In the revised manuscript, we re-ran all experiments on a new GPU and report the results.
 
 \begin{shaded}
 	\noindent\textbf{C5:} The comparison with static hash tables is missing recent advances in accelerated, GPU hash table. E.g. \cite{junger2018warpdrive} achieves 1.3B ops for building on the same generation (server) hardware. A comparison with stadium hashing \cite{khorasani2015stadium} which claims to be up 2-3x faster than Cuckoo is missing as well. Including those would more adequately present the tradeoffs between static and dynamic hashing.
 \end{shaded}
 %
 \noindent\textbf{Response:} 
+In the revised manuscript, we add the experimental results of WarpDrive proposed in \cite{junger2018warpdrive}. 
+\reminder{ADD SOME EXPERIMENTAL RESULTS.}
+We note that WarpDrive employs an open addressing approach. Hence, a completely rebuilt is necessary if the hash table needs to grow or shrink, which is not suitable for the dynamic scenario. 
+We do not compare with stadium hash \cite{khorasani2015stadium} for the following reason:
+\begin{itemize}
+	\item Stadium hash achieves 2-3x speedup over cuckoo hash in the \emph{out-of-core} scenario where the table is kept in the main memory. It employs a ticket-board signature for pruning KV pairs which are not stored in a hash bucket and thus reduces PCIe communication. In our scenario, we assume the \emph{in-core} scenario where the hash table is stored on the GPU device. Furthermore, the ticket-board signature does not support deletion. Hence, stadium hash is not suitable for the general dynamic scenario. 
+	\item Stadium hash is only 1.04x-1.19x faster than cuckoo hash for the \emph{in-core} scenario. 
+\end{itemize}
+We add the aforementioned discussions to the related work section \reminder{TODO}.
+
 
 
 \begin{shaded}
 	\noindent\textbf{C6:} The paper lacks an explanation why resizing their hash table can be done at 10x the throughput of insertion. The authors should revisit how their throughput calculation is done, e.g., only consider the hash table entries accessed.
 \end{shaded}
 %
-\noindent\textbf{Response:} 
+\noindent\textbf{Response:}
+Thanks for pointing out the issue here. The throughput is calculated by the number of entries in the resizing table over the time to complete the resize. 
+We want to show this result for demonstrating the superiority of our resizing approach. 
+For each normal insertion operation, one thread needs to lock the bucket with an atomic operation. This is particularly expensive for GPUs. Moreover, for a filled factor at 85\% (the default), the number of cuckoo evictions are high. In contrast, the upsize operation does not require to lock any bucket. Instead, it only performs sequential read and write to move the entries, without any cuckoo evictions. The downsize operation is slower than the upsize operation since some of the moved entries cause cuckoo evictions and need to be handled as normal insertions. 
+
+To address the reviewer's concern, we follow the advise and add the number of entries accessed as another measure for throughput analysis. 
+The aforementioned discussions are included in the revised experimental section \reminder{TODO}.

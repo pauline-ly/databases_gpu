@@ -3,6 +3,7 @@
 \usepackage{framed}
 \usepackage{xcolor}
 \usepackage{amsmath}
+\usepackage{enumitem}
 \usepackage{geometry}
 \geometry{a4paper,top=10mm,left=20mm,right=20mm,bottom=20mm}
 \colorlet{shadecolor}{gray!20}
@@ -34,7 +35,7 @@
 \sethlcolor{blue}
 
 \newcommand{\eat}[1]{}
-\newcommand{\reminder}[1]{ [[[ \marginpar{\mbox{$<==$}} #1 ]]] }
+\newcommand{\reminder}[1]{ \textcolor{red}{[[[ \marginpar{\mbox{$<==$}} #1 ]]]} }
 \newtheorem{definition}{Definition}
 \newtheorem{lemma}{Lemma}
 \newtheorem{proposition}{Proposition}

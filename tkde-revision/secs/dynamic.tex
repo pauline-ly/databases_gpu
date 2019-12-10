@@ -43,8 +43,8 @@ To efficiently utilize GPU device memory, we resize the hash tables when the fil
 One possible strategy is to double or half all hash tables and to then rehash all KV pairs. However, this simple strategy renders poor memory utilization and 
 excessive overheads for rehashing. First, doubling the size of the hash tables results in filled factor immediately cut to half, while downsizing the hash tables to half the size followed by rehashing could only be efficient when the filled factor is significantly low (e.g., $40\%$), both of which scenarios are not resource friendly. Second, rehashing all KV pairs is expensive and it hurts the performance stability for most of the streaming applications since the entire hash table is subject to locking. 
 
-We propose an alternative strategy, illustrated in Figure~\ref{fig:resize}. 
-Given $d$ hash tables depicted in Figure~\ref{fig:resize},
+We propose an alternative strategy, illustrated in Figure~\ref{fig:example-resize}. 
+Given $d$ hash tables depicted in Figure~\ref{fig:example-resize},
 we always double the smallest subtable or chop the largest subtable into half for upsizing or downsizing respectively, when filled factor falls out of $[\alpha,\beta]$. 
 In other words, no subtable will be more than double the size as others. The strategy implies that we do not need to lock all hash tables and only to resize one, thus achieving better performance stability compared with the aforementioned simple strategy. 
 
@@ -60,7 +60,7 @@ We allow the user to configure the number of hash tables to trade off memory and
 	\centering
 	\includegraphics[width=0.35\textwidth]{fig/MultiTable.pdf}
 	\caption{Resizing strategy}
-	\label{fig:resize}
+	\label{fig:example-resize}
 \end{figure}
 \subsection{KV distribution}\label{sec:dyn:distribute}
 Given a set of KV pairs to insert in parallel, it is critical to distribute the KV pairs among the hash tables in a way such that the hash collisions are minimized for reducing the corresponding thread conflicts. We have the following theorem to guide us for distributing the KV pairs. 
