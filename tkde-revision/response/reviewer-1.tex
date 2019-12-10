@@ -6,16 +6,31 @@
 %
 \noindent\textbf{Response:} 
 We agree with the reviewer that insertion and deletion operations in dynamic hash tables bring more 
-challenges in performance optimization. Nevertheless, due to the high memory bandwidth and massive parallelism of GPUs, hash table implemented on GPUs still show significant insertion and deletion throughput speedups over the counterparts implemented on CPUs. For instance, the insertion throughput of a well-established CPU-based concurrent hash table \cite{li2014algorithmic} is only below 50 Million Operations Per Second (Mops), whereas the throughput of insertion on GPUs can be 1000 Mops in our new experiments. This shows the potential of GPU-based dynamic hash table, even with complicated update operations. We add experimental study on CPU-based dynamic hash table to validate our claim. Please see Section~\reminder{TODO} for more details. 
+challenges in performance optimization. Nevertheless, due to the high memory bandwidth and massive parallelism of GPUs, hash table implemented on GPUs still show significant insertion and deletion throughput speedups over the counterparts implemented on CPUs. For instance, the insertion throughput of a well-established CPU-based concurrent hash table \cite{li2014algorithmic} is only below 50 Million Operations Per Second (Mops), whereas the throughput of insertion on GPUs can be over 1000 Mops in our new experiments. This shows the potential of GPU-based dynamic hash table, even with complicated update operations. We add experimental study on CPU-based dynamic hash table to validate our claims. Please see Section~\reminder{TODO} for more details. 
 
 \begin{shaded}
 	\noindent\textbf{C2:} My second question is how to solve the critical section problem that when two or more threads want to insert a KV pair into the same location. The authors mentioned that for insert operation, there are a lot of conflicts and they proposed a voter coordination scheme to reduce the cost of spinning of locks. The authors should explain the implementation of voter coordination scheme on GPU in detail. For example, how do you assign an insert operation to a thread instead of using a warp to handle the operation? In my opinion, it is possible to assign an insert operation to a thread by allocating a block containing only one thread. Therefore, if multiple insert operations are required, a large number of such blocks must be allocated. First, allocating blocks that contain only one thread is not efficient. Second, how to implement the lock on GPUs? We know that the communication between different blocks can only be done with global memory. Furthermore, how to deal with the synchronization of these threads on different blocks? 
 \end{shaded}
 
-\noindent\textbf{Response:} We are sorry for the unclear presentation in our original manuscript. We have added more implementation details in Section~\reminder{TODO} of the revised submission. 
+\noindent\textbf{Response:} We are sorry for the unclear presentation in our original manuscript. We have added more implementation details in Section 5.2 of the revised submission. 
 
-We give a brief response here. Each thread is indeed assigned to one KV insertion but a block contains multiple threads. All 32 threads in a warp first vote for a leader through the ``ballot'' function.
-The leader thread then tries lock the bucket where it wants to insert the assigned KV pair. The lock is implemented with the ``atomicCAS'' function. If the leader successfully acquires the lock, all threads in the same warp help the leader to inspect all elements in the bucket and perform insertion . If the lock is unsuccessful, all threads re-vote for another leader, which then tries to lock another bucket. In this way, we reduce the cost of spinning on locks. Threads successfully insert their KV pairs will not participate in the voting but will always help the leader for insertion. 
+We give a brief response here. Each thread is indeed assigned to one KV insertion. 
+However, a thread not only inserts the assigned KV pair but also helps other threads in the same warp.
+All 32 threads in a warp first vote for a leader through the ``ballot'' function.
+The leader thread then tries lock the bucket where it wants to insert the assigned KV pair. 
+If the leader successfully acquires the lock, the leader broadcasts its KV pair to the warp and all threads in the same warp help the leader to inspect all elements in the bucket for insertion. If the lock is unsuccessful, all threads re-vote for another leader, which then tries to lock another bucket. In this way, we reduce the cost of spinning on locks. Threads successfully insert their KV pairs will not participate in the voting but will always help the leader for insertion. 
+The ballot and broadcast functions are implemented with CUDA primitives $\_\_ballot$ and $\_\_shfl$.
+
+The lock is implemented with the $atomicCAS(address,compare,val)$ and $atomicExch(address,val)$ functions. 
+The atomicCAS reads the value $old$ located at the address $address$ in global or shared memory and computes $old == compare \;?\; val : old$, and stores the result back to memory at the same address.
+The function returns the value $old$. 
+The atomicExch reads the value $old$ located at the address $address$ in global or shared memory and stores $val$ back to memory at the same address.
+To implement the lock, we initialize a lock variable $lock$ for each bucket to be $0$. 
+We lock the bucket using $atomicCAS(\&lock,0,1)$ and the lock is successful if the function returns $0$. 
+We unlock the bucket by using $atomicExch(\&lock,0)$. 
+
+
+
  
 
 \begin{shaded}
@@ -24,9 +39,9 @@ The leader thread then tries lock the bucket where it wants to insert the assign
 
 \noindent\textbf{Response:} 
 In this paper, we do not consider the cost of data transfer between CPU and GPUs. All performance numbers are calculated purely based on the run-time on GPUs. 
-The overhead of data transfer can be hidden by overlapping the data transfer and GPU computation, as proposed in MegaKV \cite{zhang2015mega}. Since this technique is orthogonal to the approaches proposed in our paper, we thus focus on GPU computation only. We add clarifications in Section~\reminder{TODO} for discussing the data transfer issue.
+The overhead of data transfer can be hidden by overlapping the data transfer and GPU computation, as proposed in MegaKV \cite{zhang2015mega}. Since this technique is orthogonal to the approaches proposed in our paper, we thus focus on GPU computation only. We add clarifications in Section~6.1 for discussing the data transfer issue.
 
-We add experimental comparison between a CPU-based concurrent hash table \reminder{CITE} and the GPU-based hash tables. The results have demonstrated that GPU-based approaches show significant performance advantages.  
+We add experimental comparison between a CPU-based concurrent hash table \cite{li2014algorithmic} and the GPU-based hash tables. The results have demonstrated that GPU-based approaches show significant performance speedup in Figure~\reminder{TODO}.  
 
 \begin{shaded}
 	\noindent\textbf{C4:} In Table 2, what is the meaning of unique keys? Does the difference between KV pairs and unique keys have any impact on the performance of the insert, delete, and find operations? In addition, what is the memory size of the hash table that stores these five data sets?
