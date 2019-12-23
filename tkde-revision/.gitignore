@@ -1,6 +1,7 @@
 acmart.pdf
 acmguide.pdf
 main.pdf
+*.docx
 *.log
 *.aux
 *.cfg
