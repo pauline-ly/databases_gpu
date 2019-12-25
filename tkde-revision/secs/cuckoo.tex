@@ -27,12 +27,7 @@ Random accesses are particularly expensive as GPUs contain limited cache size an
 
 One possible approach to reduce the number of lookups is to first hash all KV pairs into $d'$ partitions. For each partition, we employ a cuckoo hash with two hash functions. In this way, one only needs to perform two lookups for any \formal{find} and \formal{delete} operations. However, this approach cannot prevent the skewness issue across the $d'$ partitions, especially against frequent delete operations. It is possible that the deleted KVs all fall into one partition $c_i$, which results in low filled factor for the table/s allocated to $c_i$. Furthermore, when inserting KVs into other partitions, e.g., $c_j \neq c_i$, the efficiency could be severely degraded due to high filled factor of the table/s allocated to $c_j$. 
 
-Hence, we propose a two-layer approach to resolve the skewness issue.
-\revise{
-The two-layer approach is rooted from the data partitioning technique~\cite{bender2012don,boncz1999database,zhang2019data,zuo2018write}. 
-}
-Given $d$ hash tables, we first hash all KV pairs into $\binom{d}{2}$ partitions. 
-Each partition refers to a unique pair of hash tables. Then, each KV pair is hashed and stored in only one of corresponding pair. In this way, it only requires at most two lookups for \formal{find} and \formal{delete}. The advantage of this approach is that each KV pair could appear in any of the $d$ hash tables, which offers opportunities to balance a skewed distribution. The following example illustrates a scenario where the skewness is mitigated during the insertion process. 
+Hence, we propose a two-layer approach to resolve the skewness issue. Given $d$ hash tables, we first hash all KV pairs into $\binom{d}{2}$ partitions. Each partition refers to a unique pair of hash tables. Then, each KV pair is hashed and stored in only one of corresponding pair. In this way, it only requires at most two lookups for \formal{find} and \formal{delete}. The advantage of this approach is that each KV pair could appear in any of the $d$ hash tables, which offers opportunities to balance a skewed distribution. The following example illustrates a scenario where the skewness is mitigated during the insertion process. 
 
 \begin{example}
 A KV pair $(k,v)$ is hashed to the pair $(h_i,h_j)$ for the first layer,  we will then hash $k$ and try to insert $(k,v)$ into $h_i$ for the second layer. Assuming the corresponding bucket in $h_i$ is full for $(k,v)$, we evict another KV pair $(k',v')$. Then, we discover that $(k',v')$ is hashed to the pair $(h_i,h_t)$. Henceforth, we insert $(k',v')$ to $h_t$ and the process repeats until no eviction.
@@ -70,7 +65,7 @@ In the reminder of this session, we discuss how to utilize GPUs for the two-laye
 		\label{fig:atomicExch}
 		\includegraphics[width=5.3cm]{exp/atomic/atomicExch.eps}
 	\end{minipage}
-	\caption{The performance of atomic operations for increasing conflicts}
+	\caption{The performance of atomic operations for varying number of conflicts}
 	\label{fig:atomic}
 \end{figure}
 
@@ -144,25 +139,16 @@ Compared with locking on atomic operations, the cost of warp voting is almost ne
 
 Parallel insertion with the voter coordination scheme is presented in Algorithm~\ref{algo:insert}.
 The pseudo code demonstrates how a thread (with lane $l$) from warp $wid$ inserts a KV. 
-\revise{The warp first conducts a vote with the ballot function among active threads and the process will terminate if all threads finish their tasks} (lines~\ref{algo:insert:active:start}-\ref{algo:insert:active:end}).  
+The warp will first propose a vote among active threads and the process will terminate if all threads finish their tasks (lines~\ref{algo:insert:active:start}-\ref{algo:insert:active:end}).  
 This achieves better resource utilization since no thread will be idle when one of the threads in the same warp is active.  
 The leader $l'$ then broadcasts its KV pair $(k',v')$ as well as the hash table $h_{i'}$ to the warp and tries to lock the inserting bucket (lines~\ref{algo:insert:lock:start}-\ref{algo:insert:lock:end}). 
-\revise{Note that the ballot and broadcast functions are implemented with CUDA primitives $\_\_ballot$ and $\_\_shfl$.}
+Note that we keep track the last hash table $h_t$ where $(k',v')$ is evicted and ensure $h_{i'} \neq h_t$ to avoid looping. 
 The broadcast function ensures all threads in the warp receive the locking result and the warp revotes if $l'$ fails to obtain the lock.
 Otherwise, the warp follows $l'$ and proceeds to update the bucket for $(k',v')$ with a warp-centric approach similar to \formal{find}.
 Once a thread finds $k'$ or an empty space in the bucket, $l'$ will add or update with $(k',v')$ (lines~\ref{algo:insert:write:start}-\ref{algo:insert:write:end}).
-When there is no empty slot, $l'$ swaps $(k',v')$ with another KV $(k^*,v^*)$ in the bucket and inserts the evicted KV to hash table $j$ in the next round. 
-The warp finishes the work when all KV pairs are inserted.
-%In summary, each iteration of the loop presented in Algorithm~\ref{algo:insert} issues $1$ atomic operation and at most $1$ device memory read/write (lines~\ref{algo:insert:vote:start}-\ref{algo:insert:loop:end}).  
-
-\vspace{1mm}
-\revise{
-\noindent\textbf{Implementation Details.} We use atomicCAS and atomicExch functions for locking and unlocking a bucket, respectively.
-$atomicCAS(address,compare,val)$ reads the value $old$ located at the address $address$ in global or shared memory and computes $old == compare \;?\; val : old$, and stores the result back to memory at the same address.The function returns the value $old$. $atomicExch(address,val)$ reads the value $old$ located at the address $address$ in global or shared memory and stores $val$ back to memory at the same address. 
-To implement the lock, we initialize a lock variable $lock$ for each bucket to be $0$. 
-We lock the bucket using $atomicCAS(\&lock,0,1)$ and the lock is successful if the function returns $0$. 
-We unlock the bucket by using $atomicExch(\&lock,0)$. 
-}
+Otherwise there is no space left, $l'$ swaps $(k',v')$ with another KV $(k^*,v^*)$ in the bucket and inserts the evicted KV to hash table $j$ in the next round. 
+The warp finishes the work when all KV pairs are inserted successfully.
+In summary, each iteration of the loop presented in Algorithm~\ref{algo:insert} issues $1$ atomic operation and at most $1$ device memory read/write (lines~\ref{algo:insert:vote:start}-\ref{algo:insert:loop:end}).  
 
 %Note that we have yet covered how to choose the hash table index $i$ for each insertion (Algorithm~\ref{algo:insert}). Additional number of conflicts would happen if all threads attempting to insert to the same table. For the flow of presentation, we leave the discussion to Section~\ref{sec:dyn} since choosing the hash table is more coherent to the load balancing problem for resizing hash tables. 
 %Moreover, a careful reader would find that the insertion process could lead to multiple appearances of the same key in different hash tables. To fill this gap, one can attach a timestamp to the insertion batch.
@@ -173,7 +159,7 @@ We unlock the bucket by using $atomicExch(\&lock,0)$.
 
 We give the following example to demonstrate the parallel insertion process.
 \begin{example}
-	In Figure~\ref{fig:voter}, we visualize the scenario for three threads: $l_x$, $l_y$, $l_z$ from warp $a$ and warp $b$, inserting KV pairs $(k_1,v_1)$, $(k_{33},v_{33})$, $(k_{65},v_{65})$ independently. 
+	In Figure~\ref{fig:voter}, we visualize the scenario for three threads: $l_x$, $l_y$, $l_z$ from warp $a$ and warp $b$, inserting KV pairs $(k_1,v_1)$,$(k_{33},v_{33})$,$(k_{65},v_{65})$ independently. 
 	Suppose $l_y$ and $l_z$ become the leaders of warp $a$ and $b$ respectively. Both threads will compete for the bucket $y$ and $l_z$ wins the battle. 
 	$l_z$ will then leads warp $b$ to inspect the bucket and evict $(k_{64},v_{64})$ by replacing with $(k_{65},v_{65})$. 
 	In the meanwhile, $l_y$ does not lock on bucket $y$ and joins the new leader $l_x$ voted in warp $a$. 
@@ -211,7 +197,7 @@ It has been pointed out that analyzing the theoretical upper bound complexity of
 Nevertheless, empirical results have shown that increasing the number of tables leads to better insertion performance. Please refer to our experimental results presented in Section~\ref{sec:exp}.
 %Thus, we assume the complexity for inserting to $d$ hash tables is the same as that of $2$ has tables, as long as $d$ keeps constant.  
 
-We then analyze the number of possible thread conflicts. Assuming we launch $m$ threads in parallel, each of them is assigned to a unique key, and the total number of unique buckets are $H=\sum_{i=1}^d|h^i|$. For \formal{find} and \formal{delete}, there is no conflict at all. 
+We then analyze the number of possible thread conflicts. Assuming we launch $m$ threads in parallel, each of them is assigned to an unique key, and the total number of unique buckets is $H=\sum_{i=1}^d|h^i|$. For \formal{find} and \formal{delete}, there is no conflict at all. 
 For \formal{insert}, computing the expected number of conflicting buckets resembles the \emph{balls and bins} problem \cite{raab1998balls}, which is $O(\binom{m}{2}/H)$. 
 Given GPUs have a large number of threads, there could be a significant amount of conflicts. Thus, we propose the voter coordination scheme to reduce the cost of spinning on locks. 
 %Note that the analysis is done for the cases where the key to update is unique. More conflicts could occur in reality when the same key is updated in parallel. 

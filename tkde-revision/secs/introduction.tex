@@ -2,23 +2,15 @@
 The exceptional advances of General-Purpose Graphics Processing Units (GPGPUs) 
 in recent years have completely revolutionized the computing paradigm across multiple fields, including cryptocurrency mining \cite{o2014bitcoin,taylor2013bitcoin}, machine learning \cite{coates2013deep,abadi2016tensorflow}, and database technologies \cite{bakkum2010accelerating,kaldewey2012gpu}.
 GPUs bring phenomenal computational power that is only available from supercomputers in the past. 
-%The state-of-the-art commercial GPU equipment (GV100) is capable to operate at the speed of 14.8 TFLOPS for single precision arithmetic and 870 GB/s peak memory bandwidth \footnote{Quadro GV100 launched by NVIDIA in March 2018}. 
-Hence, there is a prevailing interest in developing efficient parallel algorithms on GPUs to enable real-time analytics.
+The state-of-the-art commercial GPU equipment (GV100) is capable to operate at the speed of 14.8 TFLOPS for single precision arithmetic and 870 GB/s peak memory bandwidth \footnote{Quadro GV100 launched by NVIDIA in March 2018}. 
+Hence, there is a prevailing interest in develop efficient parallel algorithms on GPUs to enable real-time analytics.
 %Meanwhile, as the computing resources of GPUs continue to explode, it makes rooms for more applications to run on a single GPU equipment concurrently. For example, GV100 is built with 5120 CUDA cores and 32GB device memory. Nevertheless, most GPU programs try to occupy as much resources as possible to maximize their performance individually. 
 %The egoism renders inefficiency when the GPUs run multiple programs simultaneously. Imagining a number of concurrent programs requesting a total memory size larger than the device memory. Interleaving the program executions leads to redundant data transfers between CPUs and GPUs through PCIe, which is expensive in nature. 
 
-In this paper, we investigate a fundamental data structure, i.e., \emph{hash table}, which has been implemented on GPUs to accelerate numerous applications, ranging from relational hash join \cite{he2008relational,he2009relational,heimel2013hardware}, data mining \cite{pan2011fast,zhou2010parallel,zhong2014medusa},  key value store \cite{zhang2015mega,hetherington2015memcachedgpu,breslow2016horton} and many others \cite{bowers2010parallel,pan2010efficient,garcia2011coherent,niessner2013real,wu2015gpu}. Existing works \cite{alcantara2009real,zhang2015mega,hong2010mapcg,hetherington2015memcachedgpu,breslow2016horton} focus on the static scenario: they know the data size in advance and allocate a sufficiently large hash table to insert all data entries efficiently. 
-\revise{
-However, the data size varies in many application scenarios, e.g., sensor data processing, Internet traffic analysis and analysis of various transaction logic such as web server logs and telephone calls. When the data size varies, the static allocation strategy leads to poor memory utilization~\cite{ashkiani2018dynamic}. 
-}
+In this paper, we investigate a fundamental data structure, i.e., \emph{hash table}, which has been implemented on GPUs to accelerate numerous applications, ranging from relational hash join \cite{he2008relational,he2009relational,heimel2013hardware}, data mining \cite{pan2011fast,zhou2010parallel,zhong2014medusa},  key value store \cite{zhang2015mega,hetherington2015memcachedgpu,breslow2016horton} and many others \cite{bowers2010parallel,pan2010efficient,garcia2011coherent,niessner2013real,wu2015gpu}. Existing works \cite{alcantara2009real,zhang2015mega,hong2010mapcg,hetherington2015memcachedgpu,breslow2016horton} focus on the static scenario: they know the data size in advance and allocate a sufficiently large hash table to insert all data entries efficiently. In many cases, the data size varies and static allocation leads to poor memory utilization~\cite{ashkiani2018dynamic}. 
 The egoism renders inefficiency when an application requires multiple data structures to coexist on the GPUs. One has to resort to expensive PCIe data structure transfer between CPUs and GPUs, as the hash table takes unnecessarily large memory space. 
-To fill this gap, it calls for a dynamic GPU hash table that adaptively adjusts to the size of active entries in the table. 
-The hash table should support efficient memory management by sustaining a guaranteed \emph{filled factor} of the table when the data size changes. 
-In addition to efficient memory usage, the dynamic approach should retain the performance of common hash table operations, i.e., find, delete and insert.
-\revise{
-Although dynamically-sized hash tables have been studied across the academia \cite{liu2014dynamic,zuo2018write} and the industry \cite{larson2003scaleable,douceur2000hash} for CPUs, 
-GPU-based dynamic hash table has been largely overlooked. 
-}
+To fill this gap, it calls for a dynamic GPU hash table that adaptively adjusts to the size of active entries in the table. The hash table should support efficient memory management by sustaining a guaranteed \emph{filled factor} of the table when the data size changes. 
+In addition to efficient memory usage, the dynamic approach should retain the performance of common hash table operations, i.e., find, delete and insertion.
 %Maintaining high hilled factor indicates that the table needs to be frequently adjusted to the active data size and it incurs costly rehashing to move the entries in the hash table.
 %There are two major challenges for maintaining a high filled factor for hash tables on GPUs:
 
@@ -36,13 +28,12 @@ In this work, we offer two novel designs for implementing dynamic cuckoo hash ta
 
 First, we employ the cuckoo hashing scheme with $d$ subtables specified by $d$ hash functions, and introduce a resizing policy to maintain filled factor in a bounded range, while minimizing entries in all subtables relocated at the same time. Insertions and deletions would trigger the hash tables to grow and shrink, if the filled factor falls out of the specified range. 
 Our proposed policy only locks one subtable for resizing and it always ensures no subtable can be more than twice as large as any other for handling subsequent resizing efficiently. Meanwhile, the entries in the hash table are distributed so that each subtable has near-equivalent filled factor.
-In this way, we drastically reduce the cost of resizing the hash tables and provide better system availability compared with existing works that need to relocate all data for resizing.
+In this way, we drastically reduce the cost of resizing the hash tables and provide better system availability compared with existing works that needs to relocate all data for resizing.
 Our theoretical analysis demonstrates the optimality of the scheduling policy in terms of processing updates. 
 
 Second, we propose a two-layer cuckoo hashing scheme to ensure efficient hash table operations. 
 We note that the proposed resizing strategy requires $d$ hash tables, which indicates $d$ lookup positions for find and delete operations. Apparently, a larger $d$ indicates less workload for resizing but more lookups for find and delete operations. To mitigate the tradeoff, we devise a two-layer approach that first hashes any key to a pair of hash tables where the key can be further hashed and stored in one of the pair. 
-The design ensures there are at most two lookups for any find and deletion operations.
-%which is pivotal for GPU architecture as random lookups are particularly expensive due to small cache sizes and simplified control units.
+The design ensures there are at most two lookups for any find and deletion operations, which is pivotal for GPU architecture as random lookups are particularly expensive due to small cache sizes and simplified control units.
 Furthermore, the two-layer approach retains the performance guarantee of general cuckoo hash tables.
 Empirically, the proposed hash table design is capable to operate efficiently at filled factors exceeding 90\%.
 
@@ -59,4 +50,4 @@ Hereby, we summarize our contributions as follows:
 \end{itemize}
 
 The remaining part of this paper is organized as follows. Section~\ref{sec:pre} introduces the preliminaries and the background on GPUs, followed by the related work in Section~\ref{sec:rel}. Section~\ref{sec:dyn} introduces the hash table design and the resizing strategy against dynamic updates.
-Section~\ref{sec:vot} presents two-layer cuckoo hash scheme as well as parallel operations on GPUs. The experimental results are reported in Section~\ref{sec:exp}. Finally, we conclude the paper in Section~\ref{sec:con}.
+Section~\ref{sec:vot} presents two-layer cuckoo hash scheme as well as parallel operations on GPUs.The experimental results are reported in Section~\ref{sec:exp}. Finally, we conclude the paper in Section~\ref{sec:con}.
