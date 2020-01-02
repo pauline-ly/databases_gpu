@@ -18,7 +18,7 @@ We give a brief response here. Each thread is indeed assigned to one KV insertio
 However, a thread not only inserts the assigned KV pair but also helps other threads in the same warp.
 All 32 threads in a warp first vote for a leader through the ``ballot'' function.
 The leader thread then tries lock the bucket where it wants to insert the assigned KV pair. 
-If the leader successfully acquires the lock, the leader broadcasts its KV pair to the warp and all threads in the same warp help the leader to inspect all elements in the bucket for insertion. If the lock is unsuccessful, all threads re-vote for another leader, which then tries to lock another bucket. In this way, we reduce the cost of spinning on locks. Threads successfully insert their KV pairs will not participate in the voting but will always help the leader for insertion. 
+If the leader successfully acquires the lock, the leader broadcasts its assigned KV pair to the warp and all threads in the same warp help the leader to inspect all elements in the bucket for insertion. If the lock is unsuccessful, all threads re-vote for another leader, which then tries to lock another bucket. In this way, we reduce the cost of spinning on locks. Threads successfully insert their KV pairs will not participate in the voting but will always help the leader for insertion. 
 The ballot and broadcast functions are implemented with CUDA primitives $\_\_ballot$ and $\_\_shfl$.
 
 The lock is implemented with the $atomicCAS(address,compare,val)$ and $atomicExch(address,val)$ functions. 
