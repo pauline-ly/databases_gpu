@@ -1,6 +1,6 @@
 \section{conclusion}\label{sec:con}
 In this paper, we contribute a number of novel designs for dynamic hash table on GPUs. 
-First, we introduced an efficient strategy to resize only one of a subtable at a time. Our theoretical analysis demonstrated the near-optimality of the resizing strategy. Second, we devised a two-layer cuckoo has scheme that ensures at most two loops for find and deletion operations, while still retains similar performance for insertion as general cuckoo hash tables. 
+First, we introduced an efficient strategy to resize only one of the subtables at a time. Our theoretical analysis demonstrated the near-optimality of the resizing strategy. Second, we devised a two-layer cuckoo has scheme that ensures at most two loops for find and deletion operations, while still retains similar performance for insertion as general cuckoo hash tables. 
 Empirically, our proposed design achieves competitive performance against the state-of-the-art static GPU hash tables. Our hash table design achieves superior performance while saves up to 4x memory over the state-of-the-art approaches against dynamic workloads.
 
  

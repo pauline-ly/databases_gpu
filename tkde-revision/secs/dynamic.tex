@@ -6,7 +6,7 @@ Finally, we present how to efficiently rehash and relocate the data after the ta
 
 \subsection{Hash Table Structure}\label{sec:dyn:has}
 Following cuckoo hashing \cite{pagh2004cuckoo}, we build $d$ hash tables with $d$ unique hash functions: $h^1,h^2,\ldots,h^d$. 
-In this work, we use a set of simple universal hash function such as $h^i(k) = (a_i\cdot k + b_i \mod p) \mod |h^i|$.
+In this work, we use a set of simple universal hash functions such as $h^i(k) = (a_i\cdot k + b_i \mod p) \mod |h^i|$.
 $a_i,b_i$ are random integers, $p$ is a large prime.
 Note that the proposed approaches in this paper also apply to other hash functions as well. 
 There are three major advantages for adopting cuckoo hashing on GPUs. 
@@ -31,7 +31,7 @@ Consider the L1 cache line size is 128 bytes, only a single access is required w
 The values associated with the keys in the same bucket are also stored consecutively but in a separate array.   
 In other words, we use two arrays to store the keys and the values respectively.
 The values could take much larger memory space than the keys. 
-Thus, storing keys and values separately avoid the overhead of memory access when accessing the values are not necessary, 
+Thus, storing keys and values separately avoids the overhead of memory access when accessing the values is not necessary, 
 e.g., finding a nonexistent KV pair or deleting a KV pair. 
 
 For keys having size larger than 4 bytes, a simple strategy is to store less KV pairs in a bucket. Suppose the keys are 8-bytes, a bucket can then accommodate 16 KV pairs. 
@@ -43,8 +43,8 @@ To efficiently utilize GPU device memory, we resize the hash tables when the fil
 One possible strategy is to double or half all hash tables and to then rehash all KV pairs. However, this simple strategy renders poor memory utilization and 
 excessive overheads for rehashing. First, doubling the size of the hash tables results in filled factor immediately cut to half, while downsizing the hash tables to half the size followed by rehashing could only be efficient when the filled factor is significantly low (e.g., $40\%$), both of which scenarios are not resource friendly. Second, rehashing all KV pairs is expensive and it hurts the performance stability for most of the streaming applications since the entire hash table is subject to locking. 
 
-We propose an alternative strategy, illustrated in Figure~\ref{fig:resize}. 
-Given $d$ hash tables depicted in Figure~\ref{fig:resize},
+We propose an alternative strategy, illustrated in Figure~\ref{fig:example-resize}. 
+Given $d$ hash tables depicted in Figure~\ref{fig:example-resize},
 we always double the smallest subtable or chop the largest subtable into half for upsizing or downsizing respectively, when filled factor falls out of $[\alpha,\beta]$. 
 In other words, no subtable will be more than double the size as others. The strategy implies that we do not need to lock all hash tables and only to resize one, thus achieving better performance stability compared with the aforementioned simple strategy. 
 
@@ -60,14 +60,14 @@ We allow the user to configure the number of hash tables to trade off memory and
 	\centering
 	\includegraphics[width=0.35\textwidth]{fig/MultiTable.pdf}
 	\caption{Resizing strategy}
-	\label{fig:resize}
+	\label{fig:example-resize}
 \end{figure}
 \subsection{KV distribution}\label{sec:dyn:distribute}
 Given a set of KV pairs to insert in parallel, it is critical to distribute the KV pairs among the hash tables in a way such that the hash collisions are minimized for reducing the corresponding thread conflicts. We have the following theorem to guide us for distributing the KV pairs. 
 
 \begin{theorem}\label{them:balance}
 	The amortized conflicts for inserting $m$ unique KV pairs to $d$ hash tables is minimized when $\binom{m_1}{2}/n_1 = \ldots = \binom{m_d}{2}/n_d$. 
-	$m_i$ and $n_i$ denote the elements inserted to table $i$ and the size of table $i$ respectively.  
+	$m_i$ and $n_i$ denote the elements inserted to table $i$ and the size of table $i$, respectively.  
 \end{theorem}
 \begin{proof}
 	It is noted that the amortized insertion complexity of cuckoo hash is $O(1)$. Thus, similar to balls and bins analysis, the expected number of conflicts occurred for inserting $m_i$ elements in table $i$ is estimated as $\binom{m_i}{2}/n_i$. Minimizing the amortized conflicts among all hash tables can be modeled as the following optimization problem:
@@ -114,7 +114,7 @@ a KV pair which originally resides in bucket $loc$ could be rehashed to bucket $
 With this observation, we assign a warp for rehashing all KV pairs in bucket to fully utilize the cache line size. 
 Each thread in the warp corporately takes a KV pair in the bucket and relocates the KV pair if necessary.
 Moreover, the rehashing does not trigger any conflict since KV pairs from two distinct buckets before upsizing cannot be rehashed to the same bucket.  
-Thus, the locking of a bucket is not required and we can make use of the full device memory bandwidth for the upsizing process.  
+Thus, the locking of a bucket is not required, and we can make use of the full device memory bandwidth for the upsizing process.  
 
 Note that after upsizing hash table $h^i$, its filled factor $\theta_i$ is cut to half, which could break the balancing condition emphasized in Theorem~\ref{them:balance}. Nevertheless, we use the sampling strategy for subsequent KV insertions, where each insertion is allocated to table $i$ with a probability proportional to $n_i/\binom{m_i}{2}$, to recover the balancing condition. In particular, $m_i$ remains the same while $n_i$ doubles after upsizing, the scenario leads to double the probability of inserting subsequent KV pairs to $h^i$. 
 
