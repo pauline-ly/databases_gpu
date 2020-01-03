@@ -29,7 +29,7 @@ One possible approach to reduce the number of lookups is to first hash all KV pa
 
 Hence, we propose a two-layer approach to resolve the skewness issue.
 \revise{
-The two-layer approach is rooted from the data partitioning technique~\cite{bender2012don,boncz1999database,zhang2019data,zuo2018write}. 
+The two-layer approach is inspired by the data partitioning technique~\cite{bender2012don,boncz1999database,zhang2019data,zuo2018write}. 
 }
 Given $d$ hash tables, we first hash all KV pairs into $\binom{d}{2}$ partitions. 
 Each partition refers to a unique pair of hash tables. Then, each KV pair is hashed and stored in only one of corresponding pair. In this way, it only requires at most two lookups for \formal{find} and \formal{delete}. The advantage of this approach is that each KV pair could appear in any of the $d$ hash tables, which offers opportunities to balance a skewed distribution. The following example illustrates a scenario where the skewness is mitigated during the insertion process. 

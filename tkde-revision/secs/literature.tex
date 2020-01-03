@@ -7,7 +7,8 @@ To improve from \cite{alcantara2009real}, stadium hash is proposed in \cite{khor
 Zhang \textit{et al.} propose another efficient design of GPU-based cuckoo hashing, named MegaKV, 
 to boost the performance for KV store \cite{zhang2015mega}. 
 Subsequently, Horton table \cite{breslow2016horton} improves the efficiency of \formal{find} over MegaKV by trading with the cost of introducing a KV remapping mechanism.
-Meanwhile, in the database domain, several SIMD hash table implementations have been proposed to facilitate relation join and graph processing, including cuckoo hash \cite{ross2007efficient} and linear probing \cite{zhong2014medusa}. 
+WarpDrive \cite{junger2018warpdrive} employs cooperative groups and multi-GPUs to further improve the efficiency.
+Meanwhile, in the database domain, several SIMD hash table implementations have been proposed to facilitate relation join and graph processing \cite{ross2007efficient,zhong2014medusa}. 
 
 It is noted that the aforementioned works focus on the static case: the data size for insertion is known in advance. Thus, the static designs would prepare a sufficiently large memory to store the hash table. In this way, the hash table operations are fast since the collision rarely happens. However, the static approach wastes memory resources and, to some extent, it prohibits other data structures for the same application to coexist on the device memory. 
 %Moreover, existing designs rely on atomicExch

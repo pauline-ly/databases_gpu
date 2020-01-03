@@ -26,7 +26,7 @@ We have removed the problematic statement saying ``random accesses are particula
 \end{shaded}
 %
 \noindent\textbf{Response:} 
-We have re-ran all experiments on a new machine with Nvidia P100 GPU \reminder{CHECK}. Please see the updated experimental results in Section~\reminder{TODO}.
+We have re-ran all experiments on a new machine with NVIDIA P100 GPU \reminder{CHECK}. Please see the updated experimental results in Section 6.
 
 \begin{shaded}
 	\noindent\textbf{C4:} The authors cite \cite{ashkiani2018dynamic} as the only other dynamic hash table approach. Surprisingly, the referred publication achieves better performance on GPU hardware from 4 generations ago, then the results presented in this paper on hardware from 2 generation ago, i.e., 400-700M ops for building and 600M-2B ops for querying hash tables.
@@ -47,14 +47,13 @@ In the revised manuscript, we re-ran all experiments on a new GPU and report the
 %
 \noindent\textbf{Response:} 
 In the revised manuscript, we add the experimental results of WarpDrive proposed in \cite{junger2018warpdrive}. 
-\reminder{ADD SOME EXPERIMENTAL RESULTS.}
+The results show that our proposed method is competitive against WarpDrive in the static setting. 
 We note that WarpDrive employs an open addressing approach. Hence, a completely rebuilt is necessary if the hash table needs to grow or shrink, which is not suitable for the dynamic scenario. 
 We do not compare with stadium hash \cite{khorasani2015stadium} for the following reason:
 \begin{itemize}
 	\item Stadium hash achieves 2-3x speedup over cuckoo hash in the \emph{out-of-core} scenario where the table is kept in the main memory. It employs a ticket-board signature for pruning KV pairs which are not stored in a hash bucket and thus reduces PCIe communication. In our scenario, we assume the \emph{in-core} scenario where the hash table is stored on the GPU device. Furthermore, the ticket-board signature does not support deletion. Hence, stadium hash is not suitable for the general dynamic scenario. 
 	\item Stadium hash is only 1.04x-1.19x faster than CUDPP for the \emph{in-core} scenario \cite{khorasani2015stadium}. 
 \end{itemize}
-We add the aforementioned discussions to the related work section \reminder{TODO}.
 
 
 
@@ -65,7 +64,7 @@ We add the aforementioned discussions to the related work section \reminder{TODO
 \noindent\textbf{Response:}
 Thanks for pointing out the issue here. The throughput is calculated by the number of entries in the resizing table over the time to complete the resize. 
 We want to show this result for demonstrating the superiority of our resizing approach. 
-For each normal insertion operation, one thread needs to lock the bucket with an atomic operation. This is particularly expensive for GPUs. Moreover, for a filled factor at 85\% (the default), the number of cuckoo evictions are high. In contrast, the upsize operation does not require to lock any bucket. Instead, it only performs sequential read and write to move the entries, without any cuckoo evictions. The downsize operation is slower than the upsize operation, since some of the moved entries cause cuckoo evictions and need to be handled as normal insertions. 
+For each normal insertion operation, one thread needs to lock the bucket with an atomic operation. This is particularly expensive for GPUs. Moreover, for a filled factor at 85\% (the default), the number of cuckoo evictions are high. In contrast, our upsize strategy does not require to lock any bucket. Instead, it only performs sequential read and write to move the entries, without any cuckoo evictions. The downsize strategy is slower than the upsize strategy, since some of the moved entries cause cuckoo evictions and need to be handled as normal insertions. 
 
 To address the reviewer's concern, we follow the advise and add the number of entries accessed as another measure for throughput analysis. 
 The aforementioned discussions are included in the revised experimental section \reminder{TODO}.

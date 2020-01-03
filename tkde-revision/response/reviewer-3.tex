@@ -14,8 +14,65 @@ We have carefully revised the manuscript and corrected the language issues as mu
 \end{shaded}
 %
 \noindent\textbf{Response:} 
-Our proposed approach works for tables with any size. In Figure~\reminder{TODO}, we demonstrate the performance by fixing the data size and varying the filled factor. Hence, a larger filled factor infers less memory is used. Due to space limit, we only present the result for the {\tt RAND} dataset.
-In the revision, we add the results for all datasets in an extended version as well as the supplementary material. The additional results include the performance of all methods when varying the filled factor as well as the memory usage for each implementation for the default filled factor. 
+Our proposed approach works for tables with any size. 
+In Figure 8, we demonstrate the performance by fixing the data size and varying the filled factor. 
+Hence, a larger filled factor infers less memory is used.
+Note that when fixing the data size and the filled factor at the same time, the memory sizes allocated for all GPU-based methods are almost identical.  
+Due to space limit, we only present the result for the {\tt RAND} dataset.
+We include the additional results for all datasets in this response (Figures 1-4 of the response), which share similar trends as those in the {\tt RAND} dataset.
+
+\begin{minipage}{\textwidth}
+	\begin{minipage}[b]{0.49\textwidth}\centering
+		\begin{minipage}{0.49\textwidth}\centering
+			\includegraphics[width=\textwidth]{../pic/static-load_factor/ali/insert.eps}
+			\centerline{\formal{insert}}
+		\end{minipage}
+		\begin{minipage}{0.49\textwidth}\centering
+			\includegraphics[width=\textwidth]{../pic/static-load_factor/ali/search.eps}
+			\centerline{\formal{find}}
+		\end{minipage}
+	\captionof{figure}{Throughput of all compared approaches for varying the filled factor against the \dsali dataset.}
+	\end{minipage}
+	\hfill
+	\begin{minipage}[b]{0.49\textwidth}
+		\begin{minipage}{0.49\linewidth}\centering
+			\includegraphics[width=\textwidth]{../pic/static-load_factor/reddit/insert.eps}
+			\centerline{\formal{insert}}
+		\end{minipage}
+		\hfill
+		\begin{minipage}{0.49\linewidth}\centering
+			\includegraphics[width=\textwidth]{../pic/static-load_factor/reddit/search.eps}
+			\centerline{\formal{find}}
+		\end{minipage}
+		\captionof{figure}{Throughput of all compared approaches for varying the filled factor against the \dsreddit dataset.}
+	\end{minipage}
+\end{minipage}
+
+\begin{minipage}{\textwidth}
+	\begin{minipage}[b]{0.49\textwidth}\centering
+		\begin{minipage}{0.49\textwidth}\centering
+			\includegraphics[width=\textwidth]{../pic/static-load_factor/twitter/insert.eps}
+			\centerline{\formal{insert}}
+		\end{minipage}
+		\begin{minipage}{0.49\textwidth}\centering
+			\includegraphics[width=\textwidth]{../pic/static-load_factor/twitter/search.eps}
+			\centerline{\formal{find}}
+		\end{minipage}
+		\captionof{figure}{Throughput of all compared approaches for varying the filled factor against the \dstwitter dataset.}
+	\end{minipage}
+	\hfill
+	\begin{minipage}[b]{0.49\textwidth}\centering
+		\begin{minipage}{0.49\textwidth}\centering
+			\includegraphics[width=\textwidth]{../pic/static-load_factor/tpch/insert.eps}
+			\centerline{\formal{insert}}
+		\end{minipage}
+		\begin{minipage}{0.49\textwidth}\centering
+			\includegraphics[width=\textwidth]{../pic/static-load_factor/tpch/search.eps}
+			\centerline{\formal{find}}
+		\end{minipage}
+		\captionof{figure}{Throughput of all compared approaches for varying the filled factor against the \dstpch dataset.}
+	\end{minipage}
+\end{minipage}
 
 \begin{shaded}
 	\noindent\textbf{C3:} The proposed design applies updates at the granularity of batches.  While not inherently a problem, it means that fine-grain updates that have a required order need to be placed in different batches when using the current algorithms.
@@ -24,7 +81,7 @@ In the revision, we add the results for all datasets in an extended version as w
 \noindent\textbf{Response:} 
 We thank the reviewer for pointing out the issue. As GPUs are inherently built on a throughput-oriented architecture, small batches will lead to degraded performance. 
 If the order of updates have to be enforced, CPUs are better choices for the scenario. 
-We discuss the limitation of our approach in \reminder{TODO}.
+We discuss the limitation of our approach in Section 6.4.
 
 \begin{shaded}
 	\noindent\textbf{C4:} Some missing citations.

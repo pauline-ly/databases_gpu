@@ -16,10 +16,11 @@ In Sections~\ref{sec:exp:static} and \ref{sec:exp:dynamic}, we compare all appro
 	it allocates a bucket for each hash value. 
 	\item \slab is a state-of-the-art GPU-based dynamic hash table \cite{ashkiani2018dynamic}, which employs chaining and dedicated memory allocator for resizing.
 	%\item \google is an efficient CPU-based hash table implementation\footnote{https://github.com/sparsehash/sparsehash-c11/}. We choose the \emph{dense\_hash\_map} implementation since it provides the best efficiency.
-	\item \voter is the approach proposed in this paper.
+	\item \voter is the approach proposed in this paper. 
 \end{itemize}
-We adopt the original implementations of the compared baselines from their corresponding inventors.
-\revise{For all GPU-based solutions, all performance numbers are calculated purely based on the run-time on GPUs. The overhead of data transfer between CPUs and GPUs can be hidden by overlapping the data transfer and GPU computation, as proposed in MegaKV \cite{zhang2015mega}. Since this technique is orthogonal to the approaches proposed in our paper, we thus focus on GPU computation only. } 
+We adopt the implementations of the compared baselines from their corresponding inventors.
+\revise{The codes of \voter are released\footnote{\yc{ADD link to the open source repository.}}. For GPU-based solutions, all performance numbers are calculated purely based on the run-time on GPUs. The overhead of data transfer between CPUs and GPUs can be hidden by overlapping the data transfer and GPU computation, as proposed in MegaKV \cite{zhang2015mega}. Since this technique is orthogonal to the approaches proposed in our paper, we thus focus on GPU computation only. 
+} 
 %For \megakv, we note that its intra-block synchronization could lead to inconsistency issue as well as a large number of insertion failures, especially when the filled factor is high.  
 %Thus, we revise its code by replacing the intra-block synchronization with atomicExch to resolve the race condition. The adoption of atomicExch preserves the design principle of \megakv for \emph{not} locking the entire bucket for updates. Moreover, it leads to less insertion failures and similar performance against its original implementation. 
 
@@ -105,7 +106,7 @@ We partition the datasets into batches of $1$ million insertions.
 For each batch, we augment $1$ million \formal{find} operations and $1 \cdot r$ million \formal{delete} operations,
 where $r$ is a parameter to balance insertions and deletions.
 After we exhaust all the batches, we rerun these batches by swapping the \formal{insert} and \formal{delete} operations in each batch. 
-We evaluate the performance of all compared GPU approaches except \cudpp and \warp as it does not support deletions. 
+We evaluate the performance of all compared GPU approaches except \cudpp and \warp as they do not support deletions. 
 We exclude the CPU approach as it is significantly slower than the GPU-based approaches. 
 Since \megakv does not provide dynamic resizing, we double/half the memory usage followed by rehashing all KV pairs as its resizing strategy, if the corresponding filled factor falls out of the specified range. 
 Moreover, if an insertion failure is found for a compared approach, we trigger its resizing strategy.
@@ -134,7 +135,8 @@ $r$ is the ratio of insertions over deletions in a processing batch.
 The settings of the aforementioned parameters could be found in Table~\ref{tbl:parameters}. For all experiments, we use \emph{million operations/seconds} (Mops) to measure the performance of all compared approaches.
 
 \vspace{1mm}\noindent\textbf{Experiment Environment.}
-We conduct all experiments on an Intel Xeon E5-2620 Server equipped with NVIDIA GeForce GTX 1080.The GTX 1080 is built on Pascal architecture with 20 SMs and 128 SPs per SM. The GTX 1080 has 8 GB of GDDR5 memory. Evaluations are performed using CUDA 9.1 on Ubuntu 16.04.3. The optimization level (-O3) is applied for compiling all programs.
+\yc{Update the environment specs.}
+We conduct all experiments on an Intel Xeon E5-2620 Server equipped with NVIDIA GeForce GTX 1080.Evaluations are performed using CUDA 9.1 on Ubuntu 16.04.3. The optimization level (-O3) is applied for compiling all programs.
 
 
 
@@ -166,40 +168,58 @@ We conduct all experiments on an Intel Xeon E5-2620 Server equipped with NVIDIA 
 	\label{fig:resize}
 \end{figure}
 
+%\begin{table}
+ %\centering
+ %\caption{The number bucket accessed of subtable resize.}
+ %\begin{tabular}{|c|c|c|c|c|c|c|}
+ %\hline  &  & \dstwitter & \dsreddit &  \dstpch & \dsali &  %\dsrandom \\
+  %\hline
+  %\multirow{2}*{UPSIZE} & Dcuckoo& 1133 & 1024 & 1062 & 1081 &  1021 \\
+  %\cline{2-7}
+  %~ &N-resize & 31,4444 & 31,4485 & 31,4528 & 31,4326 & 31,4453 \\
+  %\hline
+  %\multirow{2}*{DOWNSIZE} & Dcuckoo& 70,1055 & 70,4030 & 70,7677 & 70,2058 &  70,6265 \\
+  %\cline{2-7}
+  %~ &N-resize & 138,6990 & 138,8938 & 139,0672 & 138,7547 & 138,7034 \\
+  %\hline
+ %\end{tabular}
+%\end{table}
+
 \begin{table}
- \centering
- \caption{The number bucket accessed of subtable resize.}
- \begin{tabular}{|c|c|c|c|c|c|c|}
- \hline  &  & \dstwitter & \dsreddit &  \dstpch & \dsali &  \dsrandom \\
-  \hline
-  \multirow{2}*{UPSIZE} & Dcuckoo& 1133 & 1024 & 1062 & 1081 &  1021 \\
-  \cline{2-7}
-  ~ &N-resize & 31,4444 & 31,4485 & 31,4528 & 31,4326 & 31,4453 \\
-  \hline
-  \multirow{2}*{DOWNSIZE} & Dcuckoo& 70,1055 & 70,4030 & 70,7677 & 70,2058 &  70,6265 \\
-  \cline{2-7}
-  ~ &N-resize & 138,6990 & 138,8938 & 139,0672 & 138,7547 & 138,7034 \\
-  \hline
-
- \end{tabular}
+	\centering
+	\caption{The number bucket accessed for subtable resizing.}
+	\vspace{-1em}
+	\begin{tabular}{|c|c|c|c|c|}
+		\hline  
+		& \multicolumn{2}{c|}{UPSIZE} & \multicolumn{2}{c|}{UPSIZE} \\ \hline
+		& \voter & Rehash & \voter & Rehash \\ \hline
+		\dstwitter & 1133 & 314,444 & 701,055 & 1,386,990 \\ \hline
+		\dsreddit & 1024 & 314,485 & 704,030 & 1,388,938 \\ \hline
+		\dstpch& 1062 & 314,528 & 707,677 & 1,390,672\\ \hline
+		\dsali& 1081 & 314,326 & 702,058 & 1,387547 \\ \hline
+		\dsrandom& 1021 & 314,453& 706,265& 1,387, 034\\ \hline
+	\end{tabular}
 \end{table}
-
 
 \subsection{Sensitivity Analysis}\label{sec:exp:tune}
 
 \vspace{1mm}
 \noindent\textbf{Vary the number of tables.}
 A key parameter that affects the performance of \voter is the number of hash table chosen. For the static scenario, we present the throughput performance of \formal{insert} and \formal{find} for varying number of hash tables in Figure~\ref{fig:vary-table}, while fixing the memory space of the entire structure to ensure the default filled factor $\theta$. 
-The throughput of \formal{insert} increases with more hash tables, since there are more alternative locations for relocating a KV pair. However, the marginal improvement drops slightly for a larger number of hash tables. Furthermore, the throughput of \formal{find} remains constant for additional hash tables as the two-layer cuckoo hashing guarantees at most two look ups for \formal{find}. In the remaining part of this section, we fix the number of hash tables to be $4$.
+The throughput of \formal{insert} increases with more hash tables, since there are more alternative locations for relocating a KV pair. 
+\revise{The performance slightly degrades with more tables beyond 4. As the total allocated memory is fixed,
+the size of each table becomes smaller for more tables. This leads to more evictions for some overly occupied tables and degrades the performance slightly.
+Another interesting observation is that we achieve the best performance on the \dsali dataset. This is because \dsali has the least ratio of unique keys (Table~\ref{table:exp_data_sets}). Inserting an existing key is equivalent to an update operation, which results in better performance compared with that when inserting a new key.}
+The throughput of \formal{find} remains constant for additional hash tables as the two-layer cuckoo hashing guarantees at most two look ups for \formal{find}. In the remaining part of this section, we fix the number of hash tables to be $4$.
 
 \vspace{1mm}
 \noindent\textbf{Resizing analysis.}
-To validate the effectiveness of our resizing strategy proposed in Section~\ref{sec:dyn}, we compare it with rehashing. 
-For evaluating upsizing, we initialize \voter with all the data and the filled factor as the default upper bound $85\%$. Then, we perform one time upsizing, i.e., upsize one subtable, and compare our resizing strategy against rehashing all the entries in the subtable by reinserting the entries with Algorithm~\ref{algo:insert}.
-For evaluating downsizing, the setup is a mirror image of the upsizing evaluation with an initializing filled factor as the default lower bound $30\%$. 
-The throughputs are reported in Figure~\ref{fig:resize}. 
+To validate the effectiveness of our resizing strategy proposed, we compare it with rehashing. 
+For upsizing, we initialize \voter with all the data and the filled factor as the default upper bound $85\%$. Then, we perform one time upsizing, i.e., upsize one subtable, and compare our resizing strategy against rehashing all the entries in the subtable by reinserting the entries with Algorithm~\ref{algo:insert}.
+For downsizing, the setup is a mirror image of the upsizing evaluation with an initializing filled factor as the default lower bound $30\%$. 
+The throughput is reported in Figure~\ref{fig:resize}. 
 The throughput of rehashing for the upsizing scenario is severely limited, since the remaining subtables not being upsized are almost filled and inserting KV pairs resulting frequent evictions.  
-In comparison, the downsizing throughput of rehashing is significantly faster due to a low filled ratio.
+In comparison, the downsizing throughput of reinsertion is significantly faster due to a low filled ratio.
 Our resizing strategy achieves dramatic speedups over rehashing for downsizing as well. Besides, it only locks the subtable being resized and supports concurrent updates for the remaining subtables. 
 
 \begin{figure}[t]
@@ -230,62 +250,63 @@ Our resizing strategy achieves dramatic speedups over rehashing for downsizing a
 	\label{fig:static-filled-factor}
 \end{figure}
 
-\begin{figure}[t]
+\iffalse
+\begin{figure}[h]
 	\begin{minipage}{0.48\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/static-load_factor/ali/insert.eps}
+		\includegraphics[width=\linewidth]{../pic/static-load_factor/ali/insert.eps}
 		\centerline{\formal{insert}}
 	\end{minipage}
 	\hfill
 	\begin{minipage}{0.48\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/static-load_factor/ali/search.eps}
+		\includegraphics[width=\linewidth]{../pic/static-load_factor/ali/search.eps}
 		\centerline{\formal{find}}
 	\end{minipage}
 	\caption{Throughput of all compared approaches for varying the filled factor against the \dsali dataset.}
 	\label{fig:static-filled-factor}
 \end{figure}
 
-\begin{figure}[t]
+\begin{figure}[h]
 	\begin{minipage}{0.48\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/static-load_factor/reddit/insert.eps}
+		\includegraphics[width=\linewidth]{../pic/static-load_factor/reddit/insert.eps}
 		\centerline{\formal{insert}}
 	\end{minipage}
 	\hfill
 	\begin{minipage}{0.48\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/static-load_factor/reddit/search.eps}
+		\includegraphics[width=\linewidth]{../pic/static-load_factor/reddit/search.eps}
 		\centerline{\formal{find}}
 	\end{minipage}
 	\caption{Throughput of all compared approaches for varying the filled factor against the \dsreddit dataset.}
 	\label{fig:static-filled-factor}
 \end{figure}
 
-\begin{figure}[t]
+\begin{figure}[h]
 	\begin{minipage}{0.48\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/static-load_factor/twitter/insert.eps}
+		\includegraphics[width=\linewidth]{../pic/static-load_factor/twitter/insert.eps}
 		\centerline{\formal{insert}}
 	\end{minipage}
 	\hfill
 	\begin{minipage}{0.48\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/static-load_factor/twitter/search.eps}
+		\includegraphics[width=\linewidth]{../pic/static-load_factor/twitter/search.eps}
 		\centerline{\formal{find}}
 	\end{minipage}
 	\caption{Throughput of all compared approaches for varying the filled factor against the \dstwitter dataset.}
 	\label{fig:static-filled-factor}
 \end{figure}
 
-\begin{figure}[t]
+\begin{figure}[h]
 	\begin{minipage}{0.48\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/static-load_factor/tpch/insert.eps}
+		\includegraphics[width=\linewidth]{../pic/static-load_factor/tpch/insert.eps}
 		\centerline{\formal{insert}}
 	\end{minipage}
 	\hfill
 	\begin{minipage}{0.48\linewidth}\centering
-		\includegraphics[width=\linewidth]{pic/static-load_factor/tpch/search.eps}
+		\includegraphics[width=\linewidth]{../pic/static-load_factor/tpch/search.eps}
 		\centerline{\formal{find}}
 	\end{minipage}
 	\caption{Throughput of all compared approaches for varying the filled factor against the \dstpch dataset.}
 	\label{fig:static-filled-factor}
 \end{figure}
-
+\fi
 
 \begin{figure*}[htp]
 	\begin{minipage}{0.19\linewidth}\centering
@@ -365,22 +386,19 @@ Our resizing strategy achieves dramatic speedups over rehashing for downsizing a
 \subsection{Static Hashing Comparison}\label{sec:exp:static}
 
 \vspace{1mm}\noindent\textbf{Throughput Analysis.} In Figure~\ref{fig:static-all}, we present the throughput of all compared approaches over all datasets under the default setting.
-Both \megakv and \cudpp are cuckoo hash approaches but \megakv shows better performance due to its bucket structure, which fully utilizes the cache line for optimizing random access performance.
-\megakv and \slab are competitive against each other
-while our proposed \voter demonstrates the best throughput for insertion. This is because \voter can reallocate KV pairs to more buckets among $d$ hash tables whereas \megakv can only choose one of two buckets for a KV pair, which causes \megakv to have more evictions. For \formal{find}, \megakv shows the best performance since it simply checks two buckets for locating a KV pair.
-Although \voter also checks two buckets, it has slightly inferior performance than \megakv as \voter employs another layer of hashing that adds cost to the overall performance. 
-As \slab employs a chaining approach, it requires more random accesses to locate a KV pair along the chain when a high filled factor is required. Hence, \slab has inferior performance than those of \megakv and \voter.
-The experiments show that \voter is competitive even for the static scenario.
+\revise{GPU-based approaches outperform the CPU-based baseline significantly. For \formal{insert}, \warp demonstrates the best performance overall. This is because \warp employs the linear probing strategy, which achieves better cache locality than the cuckoo strategy. Nevertheless, \voter shows competitive throughput. 
+For \formal{find}, \megakv shows the best performance at the default filled factor since it simply checks two buckets for locating a KV pair.
+Although \voter also checks two buckets, it has slightly inferior performance than \megakv as \voter employs another layer of hashing that adds cost to the overall performance.
+As \slab employs a chaining approach, it requires more random accesses to locate a KV pair along the chain when a high filled factor is required. Hence, \slab has inferior performance than other GPU-based solutions.}
+
+
 
 \vspace{1mm}\noindent\textbf{Varying filled factor $\theta$.}
-We vary the filled factor $\theta$ and show the performance of all compared approaches against the \dsrandom dataset. The other datasets show similar trend and thus we omit the results in the paper.
-For cuckoo hash approaches, i.e., \cudpp, \megakv and \voter, 
-the insertion performance slightly degrades for a higher filled factor. \voter shows better stability for insertion as it employs the two-layer hashing approach which allows it to reallocate KV pairs efficiently even when the hash table is almost filled ($\theta=90\%$).
-As cuckoo hash approaches only require constant lookups for \formal{find}, the performance is not affected by the filled factor except \cudpp.
-This is because \cudpp automatically chooses the number of hash functions given the data to be inserted (up to 5). 
-Hence, it may employ more hash functions for higher filled factor to improve the insertion performance. 
-However, this affects the throughput for \formal{find} as it needs to check more locations to get one KY pair.  
-For \slab, the performance of both \formal{insert} and \formal{find} is dramatically affected by the filled factor. When $\theta=90\%$, \voter outperforms \slab by over 2x and 2.5x for \formal{insert} and \formal{find} respectively.
+We vary the filled factor $\theta$ and show the performance of all GPU-based approaches against the \dsrandom dataset in Figure~\ref{fig:static-filled-factor}. The other datasets show similar trend and thus we omit the results in the paper.
+\revise{For \slab, the performance of both \formal{insert} and \formal{find} is dramatically affected by the filled factor. This is because \slab employs the chaining approach, where high filled factor leads to long chains and poor performance.
+Overall, \warp demonstrates superior performance for the static setting. As aforementioned, \warp has better cache locality than the other approaches. 
+Nevertheless, \voter shows competitive performance and could outperform \warp at high filled factors, e.g., $\theta \geq 0.85$. Furthermore, the linear probing strategy adopted by \warp may need to scan multiple memory positions for \formal{find} and \formal{delete}. Although \cudpp also employs the cuckoo strategy, it automatically determines the number of hash tables for a given data size. At high filled factors, \cudpp employs more hash tables and scan more buckets. Hence, its performance drops for high filled factors. In contrast, \voter and \megakv with the cuckoo strategy only inspect two buckets, which explain their stable throughput in Figure~\ref{fig:static-filled-factor} for \formal{find}. Furthermore, \voter shows better insertion performance than \megakv due to our proposed strategy for resolving conflicts efficiently.}
+
 
 
 %\vspace{1mm}\noindent\textbf{GPU Profiling.} To further study the behavior of the approaches, we present three types of profiling results for all \formal{insert} GPU kernels in Figure~\ref{fig:static:profile}.
@@ -469,7 +487,7 @@ We evaluate the performance stability of the compared approaches in Figure~\ref{
 In particular, we track the filled factor after processing each batch.
 \slab shows good stability in terms of memory usage for the starting phases. Unfortunately, due to the symbolic deletion approach employed, the memory efficiency of \slab degrades significantly as more deletions are processed. In particular, its filled factor drops to less than $20\%$ after processing less than 100 batches for the \dsali dataset, which deems for a complete rebuild.
 %
-\megakv shows unstable trend since it employs a simple double/half approach for resizing. We can see its filled factor jumps up or down dramatically at the points of resizing. \voter demonstrates the best overall stability and saves up to 4x memory over the compared baselines (the \dsali dataset). 
+\megakv shows unstable trend since it employs a simple double/half approach for resizing. We can see its filled factor jumps up or down dramatically at the points of resizing. \voter demonstrates the best overall stability and saves up to \yc{check this number: 4x} memory over the compared baselines (the \dsali dataset). 
 The results have validated our design where only one of the subtables are subject to resizing. 
 Nevertheless, there is still rooms for improvement. We note that for some datasets, i.e., \dstwitter, \dsreddit, \dstpch and \dsrandom, we observe that the filled factor of \voter drops sharply.
 This is because, even after one time of upsizing, the insertions fail due to too many evictions and it triggers another round of upsizing. We leave it as a future work. 
@@ -479,22 +497,26 @@ This is because, even after one time of upsizing, the insertions fail due to too
 We have also varied the size of each processing batch. The results are reported in Figure~\ref{fig:vary-batch-size}. 
 \slab remains to show inferior performance than \megakv and \voter. 
 This is because \slab accommodates new inserted KV pairs with the chaining approach and does not increase the range of the unique hash values. Hence, a stream of insertions will eventually lead to long chains, which hurts the performance of hash table operations. Furthermore, \voter presents better performance than \megakv and the margin increases with a larger batch size.
+\revise{Note that one limitation of existing GPU-based approaches is that they apply updates at the granularity of batches. It is an interesting direction for exploring efficient GPU hashing when a required update order is enforced.}
 
 
 \vspace{1mm}\noindent\textbf{Varying the filled factor lower bound $\alpha$.}
 We vary the lower bound of the filled factor and report the results in Figure~\ref{fig:vary-lower-time}. 
 We only compare \megakv and \voter since \slab is unable to control the filled factor because of \slab's symbolic deletion approach. 
-Apparently, the simple resizing strategy adopted by \megakv incurs substantial overhead. Such overhead grows for a higher $\alpha$ since the number of downsizings increases. The performance of \voter is not affected significantly due to the incremental resizing approach by updating only one subtable at a time. We note that, the performance of \megakv is competitive against \voter for the \dsali dataset. This is because \megakv occupies significant more memory spaces than that of \voter, as evidenced in Figure~\ref{fig:track-stability} (up to 4x). Hence, \megakv trades space efficiency with time efficiency.
-Nevertheless, \voter remains superior over \megakv in terms of time efficiency while saves GPU memory substantially. 
+Apparently, the simple resizing strategy adopted by \megakv incurs substantial overhead. Such overhead grows for a higher $\alpha$ since the number of downsizings increases. The performance of \voter is not affected significantly due to the incremental resizing approach by updating only one subtable at a time. 
+%We note that, the performance of \megakv is competitive against \voter for the \dsali dataset. This is because \megakv occupies significant more memory spaces than that of \voter, as evidenced in Figure~\ref{fig:track-stability}. Hence, \megakv trades space efficiency with time efficiency.
+%Nevertheless, \voter remains superior over \megakv in terms of time efficiency while saves GPU memory substantially. 
 
 
 
 \vspace{1mm}\noindent\textbf{Varying the filled factor upper bound $\beta$.}
 The results for varying $\beta$ is reported in Figure~\ref{fig:vary-upper-time}. 
 It is interesting to see that the upper bound does not significantly affect the overall performance for \megakv and \voter. 
-On one hand, higher filled factor leads to slower \formal{insert} performance. On the other hand, less number of rehashing incurred for a higher filled factor. Thus, the overall performance remains stable for both approaches as the opposing factors cancel each other. \megakv has competitive efficiency against \voter in the \dsali dataset. The reason is similar as we discussed for varying the lower bound $\alpha$.
+On one hand, higher filled factor leads to slower \formal{insert} performance. On the other hand, less number of rehashing incurred for a higher filled factor. Thus, the overall performance remains stable for both approaches as the opposing factors cancel each other. Nevertheless, \voter remains superior over \megakv in terms of time efficiency while saves GPU memory substantially.
 
+%\megakv has competitive efficiency against \voter in the \dsali dataset. %The reason is similar as we discussed for varying the lower bound $\alpha$.
 
+\iffalse
 \begin{figure*}[htp]
 	\begin{minipage}{0.16\linewidth}\centering
 		\includegraphics[width=\linewidth]{pic/group-size/g1-insert.eps}
@@ -553,7 +575,7 @@ On one hand, higher filled factor leads to slower \formal{insert} performance. O
 	\caption{Throughput of search for varying group size .}
 	\label{fig:vary-upper-time}
 \end{figure*}
-
+\fi
 
 
 
