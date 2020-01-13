@@ -19,7 +19,7 @@ In Sections~\ref{sec:exp:static} and \ref{sec:exp:dynamic}, we compare all appro
 	\item \voter is the approach proposed in this paper. 
 \end{itemize}
 We adopt the implementations of the compared baselines from their corresponding inventors.
-\revise{The codes of \voter are released\footnote{\yc{ADD link to the open source repository.}}. For GPU-based solutions, all performance numbers are calculated purely based on the run-time on GPUs. The overhead of data transfer between CPUs and GPUs can be hidden by overlapping the data transfer and GPU computation, as proposed in MegaKV \cite{zhang2015mega}. Since this technique is orthogonal to the approaches proposed in our paper, we thus focus on GPU computation only. 
+\revise{The codes of \voter are released\footnote{https://github.com/pauline-ly/Dycuckoo.}. For GPU-based solutions, all performance numbers are calculated purely based on the run-time on GPUs. The overhead of data transfer between CPUs and GPUs can be hidden by overlapping the data transfer and GPU computation, as proposed in MegaKV \cite{zhang2015mega}. Since this technique is orthogonal to the approaches proposed in our paper, we thus focus on GPU computation only. 
 } 
 %For \megakv, we note that its intra-block synchronization could lead to inconsistency issue as well as a large number of insertion failures, especially when the filled factor is high.  
 %Thus, we revise its code by replacing the intra-block synchronization with atomicExch to resolve the race condition. The adoption of atomicExch preserves the design principle of \megakv for \emph{not} locking the entire bucket for updates. Moreover, it leads to less insertion failures and similar performance against its original implementation. 
@@ -136,7 +136,7 @@ The settings of the aforementioned parameters could be found in Table~\ref{tbl:p
 
 \vspace{1mm}\noindent\textbf{Experiment Environment.}
 \yc{Update the environment specs.}
-We conduct all experiments on an Intel Xeon E5-2620 Server equipped with NVIDIA GeForce GTX 1080.Evaluations are performed using CUDA 9.1 on Ubuntu 16.04.3. The optimization level (-O3) is applied for compiling all programs.
+We conduct all experiments on an Intel Xeon E5-2682 Server equipped with Tesla P100-PCIE. Evaluations are performed using CUDA 9.1 on Centos 7.2. The optimization level (-O3) is applied for compiling all programs.
 
 
 
@@ -487,7 +487,7 @@ We evaluate the performance stability of the compared approaches in Figure~\ref{
 In particular, we track the filled factor after processing each batch.
 \slab shows good stability in terms of memory usage for the starting phases. Unfortunately, due to the symbolic deletion approach employed, the memory efficiency of \slab degrades significantly as more deletions are processed. In particular, its filled factor drops to less than $20\%$ after processing less than 100 batches for the \dsali dataset, which deems for a complete rebuild.
 %
-\megakv shows unstable trend since it employs a simple double/half approach for resizing. We can see its filled factor jumps up or down dramatically at the points of resizing. \voter demonstrates the best overall stability and saves up to \yc{check this number: 4x} memory over the compared baselines (the \dsali dataset). 
+\megakv shows unstable trend since it employs a simple double/half approach for resizing. We can see its filled factor jumps up or down dramatically at the points of resizing. \voter demonstrates the best overall stability and saves up to 4x memory over the  compared baselines (the \dsali dataset). 
 The results have validated our design where only one of the subtables are subject to resizing. 
 Nevertheless, there is still rooms for improvement. We note that for some datasets, i.e., \dstwitter, \dsreddit, \dstpch and \dsrandom, we observe that the filled factor of \voter drops sharply.
 This is because, even after one time of upsizing, the insertions fail due to too many evictions and it triggers another round of upsizing. We leave it as a future work. 
