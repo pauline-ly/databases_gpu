@@ -11,8 +11,8 @@ In this paper, we investigate a fundamental data structure, i.e., \emph{hash tab
 \revise{
 However, the data size varies in many application scenarios, e.g., sensor data processing, Internet traffic analysis and analysis of various transaction logic such as web server logs and telephone calls. When the data size varies, the static allocation strategy leads to poor memory utilization~\cite{ashkiani2018dynamic}. 
 }
-The egoism renders inefficiency when an application requires multiple data structures to coexist on the GPUs. One has to resort to expensive PCIe data structure transfer between CPUs and GPUs, as the hash table takes unnecessarily large memory space. 
-To fill this gap, it calls for a dynamic GPU hash table that adaptively adjusts to the size of active entries in the table. 
+The static strategy renders inefficiency when an application requires multiple data structures to coexist on the GPUs. One has to resort to expensive PCIe data transfer between CPUs and GPUs, as the hash table takes unnecessarily large memory space. 
+To fill this gap, it calls for a dynamic GPU hash table that adjusts to the size of active entries in the table. 
 The hash table should support efficient memory management by sustaining a guaranteed \emph{filled factor} of the table when the data size changes. 
 In addition to efficient memory usage, the dynamic approach should retain the performance of common hash table operations, i.e., find, delete and insert.
 \revise{
@@ -36,7 +36,7 @@ In this work, we offer two novel designs for implementing dynamic cuckoo hash ta
 
 First, we employ the cuckoo hashing scheme with $d$ subtables specified by $d$ hash functions, and introduce a resizing policy to maintain filled factor in a bounded range, while minimizing entries in all subtables relocated at the same time. Insertions and deletions would trigger the hash tables to grow and shrink, if the filled factor falls out of the specified range. 
 Our proposed policy only locks one subtable for resizing and it always ensures no subtable can be more than twice as large as any other for handling subsequent resizing efficiently. Meanwhile, the entries in the hash table are distributed so that each subtable has near-equivalent filled factor.
-In this way, we drastically reduce the cost of resizing the hash tables and provide better system availability compared with existing works that need to relocate all data for resizing.
+In this way, we drastically reduce the cost of resizing the hash tables and provide better system availability compared with the static strategy that needs to relocate all data for resizing.
 Our theoretical analysis demonstrates the optimality of the scheduling policy in terms of processing updates. 
 
 Second, we propose a two-layer cuckoo hashing scheme to ensure efficient hash table operations. 

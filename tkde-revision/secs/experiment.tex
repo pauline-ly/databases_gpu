@@ -8,10 +8,10 @@ In Sections~\ref{sec:exp:static} and \ref{sec:exp:dynamic}, we compare all appro
 
 \vspace{1mm}\noindent\textbf{Baselines.} We compare \voter with several state-of-the-art hash table implementations on CPUs and GPUs. which are listed as the following:
 \begin{itemize}
-	\item \revise{\chash is well-established CPU-based concurrent hash table that parallelize cuckoo hash \cite{li2014algorithmic}. }
-	\item \cudpp is a popular CUDA primitive library\footnote{https://github.com/cudpp/cudpp} which contains the cuckoo hash table implementation published in~\cite{alcantara2009real}.  
+	\item \revise{\chash is well-established CPU-based concurrent hash table that parallelizes cuckoo hash \cite{li2014algorithmic}. }
+	\item \cudpp is a popular CUDA primitive library which contains the cuckoo hash table implementation published in~\cite{alcantara2009real}.  
 	We use the default setup of \cudpp which automatically chooses the number of hash functions based on the data to be inserted.
-	\item \revise{\warp is a state-of-the-art warp-centric approach for GPU-based hash table \cite{junger2018warpdrive}. \warp employs a linear probe approach for handling collision. }
+	\item \revise{\warp is a state-of-the-art warp-centric approach for GPU-based hash table \cite{junger2018warpdrive}. \warp employs a linear probe approach for handling hash collision. }
 	\item \megakv is a warp-centric approach for GPU-based key value store published in~\cite{zhang2015mega}. \megakv employs a cuckoo hash with two hash functions and
 	it allocates a bucket for each hash value. 
 	\item \slab is a state-of-the-art GPU-based dynamic hash table \cite{ashkiani2018dynamic}, which employs chaining and dedicated memory allocator for resizing.
@@ -386,7 +386,7 @@ Our resizing strategy achieves dramatic speedups over rehashing for downsizing a
 \subsection{Static Hashing Comparison}\label{sec:exp:static}
 
 \vspace{1mm}\noindent\textbf{Throughput Analysis.} In Figure~\ref{fig:static-all}, we present the throughput of all compared approaches over all datasets under the default setting.
-\revise{GPU-based approaches outperform the CPU-based baseline significantly. For \formal{insert}, \warp demonstrates the best performance overall. This is because \warp employs the linear probing strategy, which achieves better cache locality than the cuckoo strategy. Nevertheless, \voter shows competitive throughput. 
+\revise{GPU-based approaches outperform the CPU-based baseline significantly. For \formal{insert}, \warp demonstrates the best performance overall. This is because \warp employs the linear probing strategy, which achieves better cache locality than the cuckoo strategy \cite{junger2018warpdrive}. Nevertheless, \voter shows competitive throughput. 
 For \formal{find}, \megakv shows the best performance at the default filled factor since it simply checks two buckets for locating a KV pair.
 Although \voter also checks two buckets, it has slightly inferior performance than \megakv as \voter employs another layer of hashing that adds cost to the overall performance.
 As \slab employs a chaining approach, it requires more random accesses to locate a KV pair along the chain when a high filled factor is required. Hence, \slab has inferior performance than other GPU-based solutions.}
@@ -397,7 +397,7 @@ As \slab employs a chaining approach, it requires more random accesses to locate
 We vary the filled factor $\theta$ and show the performance of all GPU-based approaches against the \dsrandom dataset in Figure~\ref{fig:static-filled-factor}. The other datasets show similar trend and thus we omit the results in the paper.
 \revise{For \slab, the performance of both \formal{insert} and \formal{find} is dramatically affected by the filled factor. This is because \slab employs the chaining approach, where high filled factor leads to long chains and poor performance.
 Overall, \warp demonstrates superior performance for the static setting. As aforementioned, \warp has better cache locality than the other approaches. 
-Nevertheless, \voter shows competitive performance and could outperform \warp at high filled factors, e.g., $\theta \geq 0.85$. Furthermore, the linear probing strategy adopted by \warp may need to scan multiple memory positions for \formal{find} and \formal{delete}. Although \cudpp also employs the cuckoo strategy, it automatically determines the number of hash tables for a given data size. At high filled factors, \cudpp employs more hash tables and scan more buckets. Hence, its performance drops for high filled factors. In contrast, \voter and \megakv with the cuckoo strategy only inspect two buckets, which explain their stable throughput in Figure~\ref{fig:static-filled-factor} for \formal{find}. Furthermore, \voter shows better insertion performance than \megakv due to our proposed strategy for resolving conflicts efficiently.}
+\voter shows competitive performance and could outperform \warp at high filled factors, e.g., $\theta \geq 0.85$. Furthermore, the linear probing strategy adopted by \warp may need to scan multiple memory positions for \formal{find} and \formal{delete}. Although \cudpp also employs the cuckoo strategy, it automatically determines the number of hash tables for a given data size. At high filled factors, \cudpp employs more hash tables and scan more buckets. Hence, its performance drops for high filled factors. In contrast, \voter and \megakv with the cuckoo strategy only inspect two buckets, which explain their stable throughput in Figure~\ref{fig:static-filled-factor} for \formal{find}. Furthermore, \voter shows better insertion performance than \megakv due to our proposed strategy for resolving conflicts efficiently. }
 
 
 
