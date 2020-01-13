@@ -26,7 +26,7 @@ We have removed the problematic statement saying ``random accesses are particula
 \end{shaded}
 %
 \noindent\textbf{Response:} 
-We have re-ran all experiments on a new machine with NVIDIA P100 GPU \reminder{CHECK}. Please see the updated experimental results in Section 6.
+We have re-ran all experiments on a new machine with NVIDIA Tesla P100 GPU. Please see the updated experimental results in Section 6.
 
 \begin{shaded}
 	\noindent\textbf{C4:} The authors cite \cite{ashkiani2018dynamic} as the only other dynamic hash table approach. Surprisingly, the referred publication achieves better performance on GPU hardware from 4 generations ago, then the results presented in this paper on hardware from 2 generation ago, i.e., 400-700M ops for building and 600M-2B ops for querying hash tables.
@@ -62,9 +62,9 @@ We do not compare with stadium hash \cite{khorasani2015stadium} for the followin
 \end{shaded}
 %
 \noindent\textbf{Response:}
-Thanks for pointing out the issue here. The throughput is calculated by the number of entries in the resizing table over the time to complete the resize. 
+Thanks for pointing out the issue here. The throughput is calculated by the number of KV pairs in the resizing table over the time to complete the resize. 
 We want to show this result for demonstrating the superiority of our resizing approach. 
 For each normal insertion operation, one thread needs to lock the bucket with an atomic operation. This is particularly expensive for GPUs. Moreover, for a filled factor at 85\% (the default), the number of cuckoo evictions are high. In contrast, our upsize strategy does not require to lock any bucket. Instead, it only performs sequential read and write to move the entries, without any cuckoo evictions. The downsize strategy is slower than the upsize strategy, since some of the moved entries cause cuckoo evictions and need to be handled as normal insertions. 
 
-To address the reviewer's concern, we follow the advise and add the number of entries accessed as another measure for throughput analysis. 
-The aforementioned discussions are included in the revised experimental section \reminder{TODO}.
+To address the reviewer's concern, we add the number of entries accessed as another measure for the resizing analysis. 
+The aforementioned discussions are included in the revised experimental section.

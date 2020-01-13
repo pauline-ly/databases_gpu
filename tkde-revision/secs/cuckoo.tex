@@ -147,7 +147,7 @@ The pseudo code demonstrates how a thread (with lane $l$) from warp $wid$ insert
 \revise{The warp first conducts a vote with the ballot function among active threads and the process will terminate if all threads finish their tasks} (lines~\ref{algo:insert:active:start}-\ref{algo:insert:active:end}).  
 This achieves better resource utilization since no thread will be idle when one of the threads in the same warp is active.  
 The leader $l'$ then broadcasts its KV pair $(k',v')$ as well as the hash table $h_{i'}$ to the warp and tries to lock the inserting bucket (lines~\ref{algo:insert:lock:start}-\ref{algo:insert:lock:end}). 
-\revise{Note that the ballot and broadcast functions are implemented with CUDA primitives $\_\_ballot$ and $\_\_shfl$.}
+\revise{Note that the ballot and broadcast functions are implemented with CUDA warp-level primitives $\_\_ballot$ and $\_\_shfl$~\footnote{https://devblogs.nvidia.com/using-cuda-warp-level-primitives/}.}
 The broadcast function ensures all threads in the warp receive the locking result and the warp revotes if $l'$ fails to obtain the lock.
 Otherwise, the warp follows $l'$ and proceeds to update the bucket for $(k',v')$ with a warp-centric approach similar to \formal{find}.
 Once a thread finds $k'$ or an empty space in the bucket, $l'$ will add or update with $(k',v')$ (lines~\ref{algo:insert:write:start}-\ref{algo:insert:write:end}).
