@@ -39,7 +39,7 @@ We have to clarify two things:
 	\item We suspect the reviewer is referred to Figure 5 in \cite{ashkiani2018dynamic} where the performance of CUDPP is 400-700 Mops (Build) and 600 Mops-2 Bops (Search). The performance of the dynamic hash table SlabHash is inferior than CUDPP at 300 Mops-500 Mops (Build) and 800 Mops - 900 Mops (Search). Furthermore, we want to highlight that this performance is measured at a fixed filled factor of 60\%. In our experiments, we vary the filled factor from 65\%-90\% with the default set to 85\%. Due to different memory utilization, the performance results observed are different.
 \end{itemize}
 %
-In the revised manuscript, we re-ran all experiments on a new GPU and report the results.
+In the revised manuscript, we re-ran all experiments on a new GPU server and report the new results.
 
 \begin{shaded}
 	\noindent\textbf{C5:} The comparison with static hash tables is missing recent advances in accelerated, GPU hash table. E.g. \cite{junger2018warpdrive} achieves 1.3B ops for building on the same generation (server) hardware. A comparison with stadium hashing \cite{khorasani2015stadium} which claims to be up 2-3x faster than Cuckoo is missing as well. Including those would more adequately present the tradeoffs between static and dynamic hashing.
