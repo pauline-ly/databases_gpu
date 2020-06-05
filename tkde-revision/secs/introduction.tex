@@ -14,7 +14,7 @@ However, data size varies in different application scenarios such as sensor data
 The static strategy is thus inefficient when an application requires multiple data structures to coexist on GPUs. One must resort to expensive PCIe data transfer between CPUs and GPUs, as the hash table takes up an unnecessarily large memory space. 
 Addressing this shortcoming calls for a dynamic GPU hash table that adjusts to the size of active entries in the table. 
 Such a hash table should support efficient memory management by sustaining a guaranteed \emph{filled factor} of the table when the data size changes. 
-In addition to efficient memory usage, the dynamic approach should retain the performance of common hash table operations such as find, delete and insert.
+In addition to efficient memory usage, the dynamic approach should retain the performance of common hash table operations such as find, delete, and insert.
 \revise{
 Although dynamically-sized hash tables have been studied across academia \cite{liu2014dynamic,zuo2018write} and industry \cite{larson2003scaleable,douceur2000hash} for CPUs, 
 GPU-based dynamic hash tables have largely been overlooked.}
@@ -40,7 +40,7 @@ Our theoretical analysis demonstrates the scheduling policy's optimality in term
 
 Second, we propose a two-layer cuckoo hashing scheme to ensure efficient hash table operations. 
 The proposed resizing strategy requires $d$ hash tables, which indicates $d$ lookup positions for find and delete operations, and a larger $d$ indicates less workload for resizing but more lookups for find and delete operations. To mitigate this tradeoff, we devise a two-layer approach that first hashes any key to a pair of hash tables where the key can be further hashed and stored in one of the two hash tables.  
-This design ensures that there are at most two lookups for any find and deletion operations.
+This design ensures that there are a maximum of two lookups for any find and deletion operations.
 %which is pivotal for GPU architecture as random lookups are particularly expensive due to small cache sizes and simplified control units.
 Furthermore, the two-layer approach retains the general cuckoo hash tables' performance guarantee.
 Empirically, the proposed hash table design can operate efficiently at filled factors exceeding 90\%.
@@ -52,8 +52,8 @@ Empirically, the proposed hash table design can operate efficiently at filled fa
 Thus, we summarize our contributions as follows:
 \begin{itemize}
 %	\item We propose a general dynamic hash table without assuming the size of the key-value pair and devise a novel voter-based coordination scheme to support the locking mechanism under massive GPU threads. 
-	\item We propose an efficient strategy for resizing hash tables and demonstrated the near-optimality of the resizing strategy through theoretical analysis.
-	\item We devise a two-layer cuckoo hash scheme that ensures a maximum of two lookups for find and deletion operations, while still retaining similar performance for insertion as general cuckoo hash tables. 
+	\item We propose an efficient strategy for resizing hash tables and demonstrate the near-optimality of the resizing strategy through theoretical analysis.
+	\item We devise a two-layer cuckoo hash scheme that ensures a maximum of two lookups for find and deletion operations, while still retaining similar performance for insertions as general cuckoo hash tables. 
 	\item We conduct extensive experiments on both synthetic and real datasets and compare the proposed approach against several state-of-the-art GPU hash table baselines. For dynamic workloads, the proposed approach demonstrates superior performance and reduces memory usage by up to a factor of four over the compared baselines.
 \end{itemize}
 

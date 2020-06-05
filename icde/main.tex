@@ -1,0 +1,98 @@
+\documentclass[conference]{IEEEtran}
+
+
+\usepackage{booktabs} % For formal tables
+\usepackage{xspace}
+\usepackage{mathtools}
+\usepackage{amsthm}
+\usepackage{algorithm}
+\usepackage{todonotes}
+\usepackage{color}
+\usepackage{enumitem}
+\usepackage{balance}
+\usepackage{flushend}
+\usepackage[noend]{algpseudocode}
+\usepackage{multirow}
+
+% These commands are optional
+%\acmBooktitle{Transactions of the ACM Woodstock conference}
+%\editor{Jennifer B. Sartor}
+%\editor{Theo D'Hondt}
+%\editor{Wolfgang De Meuter}
+
+\input{secs/notation.tex}
+
+\begin{document}
+\title{Dynamic Hash Tables on GPUs}
+
+\author{
+	\IEEEauthorblockN{ Yuchen Li, Qiwei Zhu$^{\dag}$, Zheng Lyu$^{\#}$, Zhongdong Huang$^{\dag}$, Jianling Sun$^{\dag}$}
+	\IEEEauthorblockA{
+		\textit{School of Information Systems, Singapore Management University}\\
+		\texttt{yuchenli@smu.edu.sg}\\
+		$^{\dag}$\textit{College of Computer Science and Technology, Zhejiang University}\\
+		$^{\dag}$\texttt{\{xxxx, hzd, sunjl\}@zju.edu.cn}\\
+		$^{\#}$\textit{Alibaba Group}\\
+		$^{\#}$\texttt{lvzheng.lz@alibaba-inc.com}
+	}
+}
+
+%\author{Yuchen~Li, Jing Zhang, Yue Liu, Zheng Lyu, Zhongdong Huang, Jianling Sun
+%	\IEEEcompsocitemizethanks{
+%		\IEEEcompsocthanksitem Y. Li is with the School of Information Systems,
+%		Singapore Management University.
+%		E-mail: yuchenli@smu.edu.sg
+%		\IEEEcompsocthanksitem J. Zhang, Y. Liu, Z. Huang and J. Sun are with the College of Computer Science and Technology, Zhejiang University.
+%		E-mail: \{zhangjing000, liuyue1013, hzd, sunjl\}@zju.edu.cn
+%		\IEEEcompsocthanksitem Z. Lyu is with the Alibaba Group.
+%	}%
+%}
+
+%\numberofauthors{1}
+%\author{
+%	\alignauthor
+%	Yuchen Li$^\dagger$, Jing Zhang, Yue Liu, Zheng Lyu$^*$, Zhongdong Huang, Jianling Sun\\
+%	\affaddr{$^\dagger$Singapore Management University},
+%	\affaddr{$^*$Alibaba Group},
+%	\affaddr{Zhejiang University}
+%	\email{$^\dagger$yuchenli@smu.edu.sg, $^*$lvzheng.lz@alibaba-inc.com, \\
+%		\{zhangjing000, liuyue1013, hzd, sunjl\}@zju.edu.cn}
+%}
+
+
+\IEEEtitleabstractindextext{%
+\begin{abstract}
+The hash table is a fundamental structure that
+has been implemented on graphics processing units (GPUs) to accelerate a wide range of analytics workloads. Most existing works have focused on static scenarios and occupying large GPU memory to maximize the insertion efficiency. In many cases, data stored in hash tables get updated dynamically and existing approaches use unnecessarily large memory resources.
+One na\"ive solution is to rebuild a hash table (known as rehashing) whenever it is either filled or mostly empty. However, this approach renders significant overheads for rehashing.
+In this paper, we propose a novel dynamic cuckoo hash table technique on GPUs, known as \emph{DyCuckoo}. 
+We devise a resizing strategy for dynamic scenarios without rehashing the entire table that ensures a guaranteed filled factor.
+The strategy trades search performance with resizing efficiency, and this tradeoff can be configured by users.
+To further improve efficiency, we propose a two-layer cuckoo hashing scheme that ensures a maximum of \emph{two} lookups for find and delete operations, while retaining similar performance for insertions as a general cuckoo hash. 
+Extensive experiments have validated the proposed design's effectiveness over several state-of-the-art hash table implementations on GPUs. 
+\emph{DyCuckoo} achieves superior performance while saving up to four times the memory over the state-of-the-art approaches against dynamic workloads.
+\end{abstract}
+}
+
+\maketitle
+\IEEEdisplaynontitleabstractindextext
+\IEEEpeerreviewmaketitle
+
+\input{secs/introduction.tex}
+\input{secs/preliminaries.tex}
+\input{secs/literature.tex}
+\input{secs/dynamic.tex}
+\input{secs/cuckoo.tex}
+\input{secs/experiment.tex}
+\input{secs/conclusion.tex}
+
+
+
+%\input{secs/appendix.tex}
+
+
+%\pagebreak
+\bibliographystyle{abbrv}
+\bibliography{ref}
+
+\end{document}

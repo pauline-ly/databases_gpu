@@ -51,13 +51,13 @@
 
 \IEEEtitleabstractindextext{%
 \begin{abstract}
-The hash table is a fundamental data structure that
-has been implemented on graphics processing units (GPUs) to accelerate a wide range of data analytics workloads. Most existing works have focused on static scenarios and occupying large GPU memory to maximize the insertion efficiency. In many cases, data stored in hash tables get updated dynamically and existing approaches use unnecessarily large memory resources.
+The hash table is a fundamental structure that
+has been implemented on graphics processing units (GPUs) to accelerate a wide range of analytics workloads. Most existing works have focused on static scenarios and occupying large GPU memory to maximize the insertion efficiency. In many cases, data stored in hash tables get updated dynamically and existing approaches use unnecessarily large memory resources.
 One na\"ive solution is to rebuild a hash table (known as rehashing) whenever it is either filled or mostly empty. However, this approach renders significant overheads for rehashing.
 In this paper, we propose a novel dynamic cuckoo hash table technique on GPUs, known as \emph{DyCuckoo}. 
-We devise an efficient resizing strategy for dynamic scenarios without rehashing the entire table that ensures a guaranteed filled factor.
+We devise a resizing strategy for dynamic scenarios without rehashing the entire table that ensures a guaranteed filled factor.
 The strategy trades search performance with resizing efficiency, and this tradeoff can be configured by users.
-To further improve efficiency, we further propose a two-layer cuckoo hashing scheme that ensures a maximum of \emph{two} lookups for find and delete operations, while retaining similar performance for insertion as general cuckoo hash tables. 
+To further improve efficiency, we propose a two-layer cuckoo hashing scheme that ensures a maximum of \emph{two} lookups for find and delete operations, while retaining similar performance for insertions as a general cuckoo hash. 
 Extensive experiments have validated the proposed design's effectiveness over several state-of-the-art hash table implementations on GPUs. 
 \emph{DyCuckoo} achieves superior performance while saving up to four times the memory over the state-of-the-art approaches against dynamic workloads.
 \end{abstract}

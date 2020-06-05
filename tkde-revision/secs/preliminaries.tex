@@ -1,5 +1,5 @@
 \section{preliminaries}\label{sec:pre}
-In this section, we first introduce some preliminary information on general hash tables and  present background material on GPU architecture. Frequently used notations are summarized in Table~\ref{tbl:stat:datasets}
+In this section, we first introduce some preliminary information on general hash tables and  present background material on GPU architecture. Frequently used notations are summarized in Table~\ref{tbl:stat:datasets}.
 
 \begin{table}
 	\centering
@@ -13,14 +13,14 @@ In this section, we first introduce some preliminary information on general hash
 		$h^i$	& the $i$th hash table \\ \hline
 		$|h^i|,n_i,m_i$	& range, table size and data size of $h^i$ \\ \hline
 		$wid,l$	& a warp ID and the $l$th lane of the warp \\ \hline
-		$\theta$& filled factor of the entire hash table \\ \hline
-		$\theta_i$& filled factor of hash table $i$ \\ \hline
+		$\theta$& the filled factor of the entire hash table \\ \hline
+		$\theta_i$& the filled factor of hash table $i$ \\ \hline
 		$loc$	& a bucket in the hash table \\ \hline
 	\end{tabular}
 \end{table}
 
 \subsection{Hash Table}
-A hash table is a fundamental data structure that stores KV pairs $(k,v)$, and the value could refer to either actual data or a reference to the data.
+The hash table is a fundamental data structure that stores KV pairs $(k,v)$, and the value could refer to either actual data or a reference to the data.
 Hash tables offer the following functionalities: \formal{insert}$(k,v)$, which stores $(k,v)$ in the hash table; \formal{find}$(k)$, in which the given $k$ values returns the associated values if they exist and NULL otherwise; and \formal{delete}$(k)$, which removes existing KV pairs that match $k$ if they are present in the table.
 
 Given a hash function with range $0 \ldots h-1$, collisions must happen when we insert $m>h$ keys into the table. There are many schemes to resolve collisions: linear probing, quadratic probing, chaining and etc. Unlike these schemes, cuckoo hashing \cite{pagh2004cuckoo} guarantees a worst case constant complexity for \formal{find} and \formal{delete},  and an amortized constant complexity for \formal{insert}. A cuckoo hash uses multiple (i.e., $d$) hash tables with independent hash functions $h^1,h^2,\ldots,h^d$ and stores a KV pair in \emph{one} of the hash tables. When inserting $(k,v)$, we store the pair in $loc=h^1(k)$ and terminate if there is no element at this location. Otherwise, if there exists $k'$ such that $h^1(k')=loc$, $k'$ is evicted and then reinserted into another hash table, e.g., $loc'=h^2(k')$.
@@ -46,7 +46,7 @@ An application written in CUDA executes on GPUs by invoking the \emph{kernel} fu
 A CUDA core executes the same instruction of a warp in lockstep.
 Each warp runs independently, but warps can collaborate through different memory types as discussed in the following.  
 
-\vspace{1mm}\noindent\textbf{Memory Hierarchy.} Compared to CPUs, GPUs are built with large register files that enable massive parallelism. 
+\vspace{1mm}\noindent\textbf{Memory Hierarchy.} Compared with CPUs, GPUs are built with large register files that enable massive parallelism. 
 %For example, NVIDIA GTX 1080 GPUs feature 256KB of register files for each SM. 
 Furthermore, the shared memory, which has similar performance to L1 cache, can be programmed within a block to facilitate efficient memory access inside an SM.
 The L2 cache is shared among all SMs to accelerate memory access to the device memory, which has the largest capacity and the lowest bandwidth in the memory hierarchy.
@@ -61,8 +61,8 @@ The L2 cache is shared among all SMs to accelerate memory access to the device m
 \vspace{1mm}\noindent\textbf{Optimizing GPU Programs.}
 There are several important guidelines to harness the massive parallelism of GPUs.
 \begin{itemize}
-	\item \emph{Minimize Warp Divergence.} Threads in a warp will be serialized if executing different instructions. To enable maximum parallelism, one just minimize branching statements executed within a warp.  
+	\item \emph{Minimize Warp Divergence.} Threads in a warp will be serialized if executing different instructions. To enable maximum parallelism, one must minimize branching statements executed within a warp.  
 	\item \emph{Coalesced Memory Access.} Warps have a wide cache line size. The threads are better off reading consecutive memory locations to fully utilize the device memory bandwidth, otherwise a single read instruction by a warp will trigger multiple random accesses. 
-	\item \emph{Control Resource Usage.} Registers and shared memory are valuable resources for enabling fast memory accesses. Nevertheless, each SM has limited resources and overdosing register files or shared memory leads to reduced parallelism on a SM.  
+	\item \emph{Control Resource Usage.} Registers and shared memory are valuable resources for enabling fast memory accesses. Nevertheless, each SM has limited resources and overdosing register files or shared memory leads to reduced parallelism on an SM.  
 	\item \emph{Atomic Operations.} When facing thread conflicts, an improper locking implementation causes serious performance degradation. One can leverage the native support of atomic operations \cite{sanders2010cuda} on GPUs to carefully resolve the conflicts and minimize thread spinning.
 \end{itemize}

@@ -14,7 +14,7 @@ In Sections~\ref{sec:exp:static} and \ref{sec:exp:dynamic}, we compare all appro
 	\item \revise{\warp is a state-of-the-art warp-centric approach for GPU-based hash tables \cite{junger2018warpdrive}. \warp employs a linear probe approach to handle hash collisions. }
 	\item \megakv is a warp-centric approach for GPU-based key value store published in~\cite{zhang2015mega}. \megakv employs a cuckoo hash with two hash functions and
 	it allocates a bucket for each hash value. 
-	\item \slab is a state-of-the-art GPU-based dynamic hash table \cite{ashkiani2018dynamic}, which employs chaining and a dedicated memory allocator for resizing.
+	\item \slab is the state-of-the-art GPU-based dynamic hash table \cite{ashkiani2018dynamic}, which employs chaining and a dedicated memory allocator for resizing.
 	%\item \google is an efficient CPU-based hash table implementation\footnote{https://github.com/sparsehash/sparsehash-c11/}. We choose the \emph{dense\_hash\_map} implementation since it provides the best efficiency.
 	\item \voter is the approach proposed in this paper. 
 \end{itemize}
@@ -107,7 +107,7 @@ We then partition the datasets into batches of $1$ million insertions.
 For each batch, we augment $1$ million \formal{find} operations and $1 \cdot r$ million \formal{delete} operations,
 where $r$ is a parameter for controlling insertions and deletions.
 After exhausting all the batches, we rerun the batches by swapping the \formal{insert} and \formal{delete} operations in each batch. 
-In other words, we issue $1$ million deletions of the keys inserted, 1 million \formal{find} operations and $1 \cdot r$ million \formal{insert} operations.
+In other words, we issue $1$ million \formal{delete} operations of the keys inserted, 1 million \formal{find} operations and $1 \cdot r$ million \formal{insert} operations.
 We then evaluate the performance of all compared GPU approaches except for \cudpp and \warp as they do not support deletions. 
 We also exclude the CPU approach as it is significantly slower than the GPU-based approaches according to Figure~\ref{fig:static-all}. 
 Since \megakv does not provide dynamic resizing, we double/half the memory usage followed by rehashing all KV pairs as a resizing strategy if the corresponding filled factor falls out of the specified range. 
@@ -115,7 +115,7 @@ Moreover, if an insertion failure is found for a compared approach, we trigger i
 
 \begin{table}[t]
 	\centering
-	\caption{Parameters in the experiments}
+	\caption{The parameters in the experiments}
 	\vspace{-1.5em}
 	\label{tbl:parameters}
 	\begin{tabular}{|c|c|c|}
@@ -224,7 +224,7 @@ The throughput of \formal{find} remains constant for additional hash tables as t
 To validate the proposed resizing strategy's effectiveness, we compare it with rehashing. 
 For upsizing, we initialize \voter with all data and set the filled factor as the default upper bound of $85\%$. We perform a one time upsizing, i.e., we upsize one subtable, and then compare our resizing strategy against rehashing all subtable entries by reinserting the entries using Algorithm~\ref{algo:insert}.
 The setup for downsizing is a mirror image of upsizing, except with an initial filled factor set as the default lower bound of $30\%$. 
-\revise{We record the number of buckets accessed to process all resizing strategies in Table~\ref{tab:buckets}. First, downsize accesses less buckets than that of upsize as there are smaller number of KV pairs to be moved for downsize (total size of the allocated table is fixed). Furthermore, \voter and rehash access similar number of buckets for downsize as the table is mostly empty at the filled factor of 30\%. Second, \voter accesses smaller number of buckets than that of rehash in the upsize scenario. This is because the tables are almost filled for upsize at 85\%, which leads to more cuckoo evictions for rehash whereas no eviction required for \voter. In Figure~\ref{fig:resize}, we also measure the throughput of both methods as the number of KV pairs to be moved over the time to complete resizing. The throughput advantage of \voter cannot be explained solely by the smaller number of buckets accessed for resizing. In fact, \voter does not need to lock any buckets for upsizing and only needs to lock a small number of buckets for downsizing when eviction, whereas rehash needs to lock every accessed buckets. The experimental results confirm the superiority of our proposed resizing strategy.}
+\revise{We record the number of buckets accessed to process all resizing strategies in Table~\ref{tab:buckets}. First, downsizing accesses less buckets than that of upsizing as there are smaller number of KV pairs to be moved for downsizing (total size of the allocated table is fixed). Furthermore, \voter and rehashing access similar number of buckets for downsizing as the table is mostly empty at the filled factor of 30\%. Second, \voter accesses smaller number of buckets than that of rehashing in the upsize scenario. This is because the tables are almost filled for upsize at 85\%, which leads to more cuckoo evictions for rehashing whereas no eviction required for \voter. In Figure~\ref{fig:resize}, we also measure the throughput of both methods as the number of KV pairs to be moved over the time to complete resizing. The throughput advantage of \voter cannot be explained solely by the smaller number of buckets accessed for resizing. In fact, \voter does not need to lock any buckets for upsizing and only needs to lock a small number of buckets for downsizing when eviction, whereas rehash needs to lock every accessed buckets. The experimental results confirm the superiority of our proposed resizing strategy.}
 
 \begin{figure}[t]
 	\begin{minipage}{0.48\linewidth}\centering
@@ -393,7 +393,7 @@ The setup for downsizing is a mirror image of upsizing, except with an initial f
 \revise{The GPU-based approaches outperform the CPU-based baseline with a wide margin. For \formal{insert}, \warp demonstrates the best performance overall, because \warp employs a linear probing strategy that achieves better cache locality than the cuckoo strategy \cite{junger2018warpdrive}. Nevertheless, \voter shows competitive throughput. 
 For \formal{find}, \megakv shows the best performance at the default filled factor since it simply checks two buckets for locating a KV pair.
 Although \voter also checks two buckets, it has slightly inferior performance to \megakv because \voter employs another layer of hashing that adds cost to the overall performance.
-\slab employs a chaining approach; therefore it requires more random accesses to locate a KV pair along the chain when a high filled factor is required. Hence, \slab has inferior performance to other GPU-based solutions.}
+\slab employs a chaining approach; therefore it requires more random accesses to locate a KV pair along the chain when a high filled factor is required. Hence, \slab has inferior performance to other GPU-based solutions, except for low filled factors.}
 
 
 
@@ -516,7 +516,7 @@ Apparently, the simple resizing strategy adopted by \megakv incurs substantial o
 \vspace{1mm}\noindent\textbf{Varying the filled factor upper bound $\beta$.}
 The results for varying $\beta$ is reported in Figure~\ref{fig:vary-upper-time}. 
 It is interesting to see that the upper bound does not significantly affect the overall performance for \megakv and \voter. 
-On one hand, a higher filled factor leads to slower \formal{insert} performance. On the other hand, smaller number of rehashing is incurred for a higher filled factor. Thus, the overall performance remains stable as the opposing factors cancel each other. Nevertheless, \voter remains superior over \megakv in terms of time efficiency while saves GPU memory substantially.
+On one hand, a higher filled factor leads to slower \formal{insert} performance. On the other hand, smaller number of rehashing is incurred for a higher filled factor. Thus, the overall performance remains stable as the opposing factors cancel each other. Nevertheless, \voter remains superior over \megakv in terms of throughput while saves GPU memory substantially.
 
 %\megakv has competitive efficiency against \voter in the \dsali dataset. %The reason is similar as we discussed for varying the lower bound $\alpha$.
 

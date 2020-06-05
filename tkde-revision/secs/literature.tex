@@ -10,7 +10,7 @@ Subsequently, Horton table \cite{breslow2016horton} improves the efficiency of \
 WarpDrive \cite{junger2018warpdrive} employs cooperative groups and multi-GPUs to further improve efficiency.
 Meanwhile, in the database domain, several SIMD hash table implementations have been proposed to facilitate relation join and graph processing \cite{ross2007efficient,zhong2014medusa}. 
 
-It is noted that these works have focused on the static case: the data size for insertion is known in advance. The static design would prepare a large enough memory size to store the hash table. In this manner, hash table operations are fast as collisions rarely happen. However, the static approach wastes memory resources and, to some extent, prohibits coexistence with other data structures for the same application in the device memory. 
+It is noted that these works have focused on the static case: the data size for insertions is known in advance. The static design would prepare a large enough memory size to store the hash table. In this manner, hash table operations are fast as collisions rarely happen. However, the static approach wastes memory resources and, to some extent, prohibits coexistence with other data structures for the same application in the device memory. 
 %Moreover, existing designs rely on atomicExch
 %operation to avoid conflicts when transacting a KV pair on GPUs, which only supports up to 64 bits for KV altogether. This design, albeit being efficient, has severe limitation as the value component exceeds 64 bits in many real-world scenarios.  
 This motivates us to develop a general dynamic hash table for GPUs that actively adjusts based on the data size to preserve space efficiency. 
@@ -18,12 +18,12 @@ This motivates us to develop a general dynamic hash table for GPUs that actively
 %Experimental results have revealed that the proposed solution could achieve competitive or even better performance than the state-of-the-art static hash tables on GPUs, while utilizing significantly less device memory. 
 
 To the best of our knowledge, there is only one existing work on building dynamic hash tables on GPUs \cite{ashkiani2018dynamic}.
-This proposed approach presents a concurrent linked list structure, known as \emph{slab list}, to construct the dynamic hash table with \emph{chaining}. 
+This proposed approach presents a concurrent linked list structure, known as \emph{slab lists}, to construct the dynamic hash table with \emph{chaining}. 
 However, there are three major issues for slab lists.
 First, they can frequently invoke concurrent memory allocation requests, especially when the data keeps inserting. Efficient concurrent memory allocation is difficult to implement in a GPU due to its massive parallelism. Although a dedicated memory management strategy to alleviate this allocation cost is proposed in \cite{ashkiani2018dynamic}, the strategy is not transparent to other data structures. More specifically, the dedicated allocator still has to reserve a large amount of memory in advance to prepare for efficient dynamic allocation, and that occupied memory space cannot be readily accessed by other GPU-resident data structures. 
 Second, a slab list does not guarantee a fixed filled ratio against deletions. 
 It symbolically marks a deleted entry without physically freeing the memory space. 
 Hence, memory spaces are wasted when occupied by deleted entries. 
 Third, the chaining approach has a lookup time of $\Omega(log(log(m)))$ for some KVs with high probability. This not only results in degraded performance for \formal{find}, it also triggers more overhead for resolving conflicts when multiple \formal{insert} and \formal{delete} operations occur at the same key.
-In contrast, the cuckoo hashing table adopted in this work guarantees $\Theta(1)$ worst case complexity for \formal{find} and \formal{delete}, 
-and $O(1)$ amortized \formal{insert} performance. Moreover, we do not introduce extra complication in implementing a customized memory manager, but rather rely on the default memory allocator provided by CUDA, while at the same time, ensuring fixed filled ratio for the hash table.
+In contrast, the cuckoo hashing table adopted in this work guarantees $O(1)$ worst case complexity for \formal{find} and \formal{delete}, 
+and $O(1)$ amortized \formal{insert} performance. Moreover, we do not introduce extra complication in implementing a customized memory manager, but rather rely on the default memory allocator provided by CUDA, while at the same time, ensuring fixed filled ratios for the hash table.
